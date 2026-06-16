@@ -27,7 +27,7 @@ function SendAlertForm() {
 
   return (
     <section className="panel-card">
-      <h2 className="panel-title">Send Global Alert</h2>
+      <h2 className="panel-title">Send Alert</h2>
 
       <form className="admin-form" onSubmit={handleSubmit}>
         <label>
