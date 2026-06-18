@@ -165,6 +165,8 @@ p {
   line-height: 1.4;
 }
 
+/* Communication screen and alert form css start here*/
+
 .communications-header {
   display: flex;
   justify-content: space-between;
@@ -173,12 +175,147 @@ p {
   margin-bottom: 22px;
 }
 
+.alert-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.alert-modal {
+  width: 650px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px 36px 32px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.alert-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.alert-modal-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.alert-close-button {
+  border: none;
+  background: transparent;
+  color: #111;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.alert-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.alert-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.alert-field span {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.required-mark {
+  color: #d11a2a;
+}
+
+.alert-field input,
+.alert-field textarea,
+.alert-field select {
+  width: 100%;
+  border: 1.5px solid #218b69;
+  border-radius: 16px;
+  background: #fff;
+  padding: 15px 16px;
+  font-size: 16px;
+  color: #333;
+  outline: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.alert-field textarea {
+  resize: none;
+  min-height: 140px;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper select {
+  appearance: none;
+  padding-right: 46px;
+}
+
+.select-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #111;
+  pointer-events: none;
+}
+
+.character-count {
+  margin: -4px 0 18px;
+  font-size: 14px;
+  color: #666;
+}
+
+.alert-modal-actions {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 14px;
+}
+
+.alert-cancel-button {
+  border: 1.5px solid #2a6f5f;
+  background: #fff;
+  color: #222;
+}
+
+.alert-submit-button {
+  border: none;
+  background: #6a6a6a;
+  color: #fff;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.alert-submit-button.active {
+  background: #006b43;
+  opacity: 1;
+  cursor: pointer;
+}
+
+
 .create-alert-button {
   padding: 14px 18px;
   background: #004f38;
   color: #fff;
   flex-shrink: 0;
 }
+
+/* Report screen styles*/
 
 .panel-card,
 .analytics-card {

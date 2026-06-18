@@ -24,6 +24,10 @@ function SendAlertForm({ onClose }) {
 
   }
 
+  const isFormValid = formData.alertTitle.trim() != '' &&
+                      formData.building.trim() != '' &&
+                      formData.message.trim() != '';
+
   return (
     <div className="alert-modal-overlay" onClick={onClose}>
       <div
@@ -110,7 +114,10 @@ function SendAlertForm({ onClose }) {
               Cancel
             </button>
 
-            <button type="submit" className="alert-submit-button">
+            <button type="submit" className={`alert-submit-button ${
+              isFormValid ? 'active' : ''
+            }`}
+            disabled={!isFormValid}>
               Send Alert
             </button>
           </div>
