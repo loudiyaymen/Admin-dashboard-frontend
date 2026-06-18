@@ -50,8 +50,6 @@ function SendAlertPage({ activePage, onNavigate }) {
         <AdminHeader />
 
         <div className="standard-page-content">
-          {!showCreateForm ? (
-            <>
               <div className="communications-header">
                 <div className="page-heading">
                   <h1>Communications</h1>
@@ -107,27 +105,12 @@ function SendAlertPage({ activePage, onNavigate }) {
                   ))}
                 </div>
               </section>
-            </>
-          ) : (
-            <>
-              <div className="communications-header">
-                <div className="page-heading">
-                  <h1>Create Alert</h1>
-                  <p>Send a global push notification to users.</p>
-                </div>
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setShowCreateForm(false)}
-                >
-                  Back
-                </button>
-              </div>
-
-              <SendAlertForm />
-            </>
-          )}
+           
+            
+            {showCreateForm && (
+              <SendAlertForm onClose={() => setShowCreateForm(false)} />
+            )}
+          
         </div>
       </main>
     </div>
