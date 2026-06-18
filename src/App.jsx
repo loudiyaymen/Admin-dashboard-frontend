@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ReportsPage from './pages/ReportsPage';
 import SendAlertPage from './pages/SendAlertPage';
+import EventsPage from './pages/EventsPage';
 import './App.css';
 
 function App() {
@@ -15,12 +16,22 @@ function App() {
     );
   }
 
+  if (activePage === 'communications') {
+    return (
+      <SendAlertPage
+        activePage={activePage}
+        onNavigate={setActivePage}
+      />
+    );
+  }
+
   return (
-    <SendAlertPage
+    <EventsPage
       activePage={activePage}
       onNavigate={setActivePage}
-    />
+    />    
   );
+
 }
 
 export default App;

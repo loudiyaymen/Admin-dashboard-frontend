@@ -48,7 +48,10 @@ function Sidebar({ activePage, onNavigate }) {
           <span>Navigation</span>
         </button>
 
-        <button type="button" className="sidebar-link">
+        <button type="button" 
+          className={`sidebar-link ${activePage === 'events' ? 'sidebar-link-active' : ''}`}
+          onClick={() => onNavigate('events')}
+        >
           <CalendarIcon size={20} />
           <span>Events</span>
         </button>
