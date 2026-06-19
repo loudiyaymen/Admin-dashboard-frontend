@@ -73,7 +73,7 @@ return(
 
                     <button
                         type="button"
-                        className="create-alert-button"
+                        className="event-add-button"
                         onClick={() => setShowCreateEvent(true)}
                     >
                        <PlusCircleIcon size={20} />

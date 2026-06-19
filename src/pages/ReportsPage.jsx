@@ -22,7 +22,22 @@ function ReportsPage({ activePage, onNavigate }) {
       location: 'Library 3rd floor',
       category: 'Incident',
       status: 'Open'
+    },
+    {
+      reportId: 'RPT-2026-046',
+      title: 'Slippery walkway near entrance',
+      location: 'Entrance E building',
+      category: 'Incident',
+      status: 'Resolved'
+    },
+    {
+      reportId: 'RPT-2026-045',
+      title: 'Personal belonging missing',
+      location: 'Building B study space',
+      category: 'Incident',
+      status: 'Resolved'
     }
+
   ];
 
   const filteredReports = reports.filter((report) =>
@@ -48,8 +63,9 @@ function ReportsPage({ activePage, onNavigate }) {
             <ReportInbox reports={filteredReports} />
           </section>
 
-          <aside>
-            <ReportsAnalytics reports={reports} />
+          <aside
+             className="analytics-column">
+            <ReportsAnalytics reports={reports}  />
           </aside>
         </div>
       </main>

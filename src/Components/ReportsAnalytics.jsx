@@ -1,3 +1,5 @@
+//Report analytics on the report screen - shows total number of reports, open reports, and a progress bar for distribution of report categories (e.g. incident, maintenance, etc.)
+
 function ReportsAnalytics({ reports }) {
   return (
     <div className="analytics-column">

@@ -15,7 +15,10 @@ function Sidebar({ activePage, onNavigate }) {
       <div className="sidebar-logo">Algonquin GO</div>
 
       <nav className="sidebar-nav">
-        <button type="button" className="sidebar-link">
+        <button type="button" 
+        className={`sidebar-link ${activePage === 'dashboard' ? 'sidebar-link-active' : ''}`}
+        onClick={() => onNavigate('dashboard')}
+        >
           <SquaresFourIcon size={20} />
           <span>Dashboard</span>
         </button>
@@ -38,12 +41,17 @@ function Sidebar({ activePage, onNavigate }) {
           <span>Reports</span>
         </button>
 
-        <button type="button" className="sidebar-link">
+        <button type="button" 
+        className={`sidebar-link ${activePage === 'emergency' ? 'sidebar-link-active' : ''}`}
+        onClick={() => onNavigate('emergency')}
+        >
           <WarningIcon size={20} />
           <span>Emergency</span>
         </button>
 
-        <button type="button" className="sidebar-link">
+        <button type="button" className={`sidebar-link ${activePage === 'navigation' ? 'sidebar-link-active' : ''}`}
+          onClick={() => onNavigate('navigation')}
+          >
           <MapPinIcon size={20} />
           <span>Navigation</span>
         </button>
