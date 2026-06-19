@@ -73,7 +73,7 @@ return(
 
                     <button
                         type="button"
-                        className="creste-alert-button"
+                        className="create-alert-button"
                         onClick={() => setShowCreateEvent(true)}
                     >
                        <PlusCircleIcon size={20} />
@@ -82,22 +82,22 @@ return(
                 </div>
 
                 <div className="events-stats">
-                    <section className="analytics=card">
+                    <section className="event-stat-card">
                         <h2>15</h2>
                         <p>Upcoming Events</p>
                     </section>
 
-                    <section className="analytics=card">
+                    <section className="event-stat-card">
                         <h2>265</h2>
                         <p>Total Participants</p>
                     </section>      
                
-                     <section className="analytics=card">
+                     <section className="event-stat-card">
                         <h2>10</h2>
                         <p>Completed this Month</p>
                     </section>    
 
-                     <section className="analytics=card">
+                     <section className="event-stat-card">
                         <h2>75%</h2>
                         <p>Avg Attendance</p>
                     </section>    
