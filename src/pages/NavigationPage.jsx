@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import AdminHeader from '../Components/AdminHeader';
 import Sidebar from '../Components/Sidebar';
+import campusMap from '../assets/campus-map.png';
 
 function NavigationPage({ activePage, onNavigate }) {
   return (
@@ -46,7 +47,7 @@ function NavigationPage({ activePage, onNavigate }) {
 
             <div className="navigation-map-image-wrap">
               <img
-                src="./assets/campus-map.png"
+                src={campusMap}
                 alt="Campus map"
                 className="navigation-map-image"
               />
