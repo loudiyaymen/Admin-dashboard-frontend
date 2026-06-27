@@ -1,15 +1,26 @@
-function ReportRow({ report }) {
+function ReportRow({ report, onSelect }) {
+  const categoryClass = report.category.toLowerCase().replace(/\s+/g, "-");
+  const statusClass = report.status.toLowerCase().replace(/\s+/g, "-");
+
   return (
-    <button type="button" className="report-row">
-      <div>
+    <button
+      type="button"
+      className="report-row"
+      onClick={() => onSelect(report.reportId)}
+    >
+      <div className="report-row-left">
         <h3>{report.title}</h3>
         <p>{report.location}</p>
         <span>{report.reportId}</span>
       </div>
 
       <div className="report-row-right">
-        <span className="report-badge report-badge-incident">{report.category}</span>
-        <span className="report-badge report-badge-open">{report.status}</span>
+        <span className={`report-badge report-badge-${categoryClass}`}>
+          {report.category}
+        </span>
+        <span className={`report-badge report-badge-status-${statusClass}`}>
+          {report.status}
+        </span>
       </div>
     </button>
   );

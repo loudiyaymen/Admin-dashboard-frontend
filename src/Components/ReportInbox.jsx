@@ -1,9 +1,9 @@
-import ReportRow from './ReportRow';
+import ReportRow from "./ReportRow";
 
-function ReportInbox({ reports }) {
+function ReportInbox({ reports, onSelectReport }) {
   return (
-    <section className="panel-card">
-      <h2 className="panel-title">Report List</h2>
+    <section className="panel-card reports-panel-card reports-list-panel">
+      <h2 className="reports-panel-title">Report List</h2>
 
       <div className="report-list">
         {reports.length === 0 ? (
@@ -13,6 +13,7 @@ function ReportInbox({ reports }) {
             <ReportRow
               key={report.reportId}
               report={report}
+              onSelect={onSelectReport}
             />
           ))
         )}

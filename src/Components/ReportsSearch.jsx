@@ -1,10 +1,12 @@
-import { MagnifyingGlassIcon } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 
 function ReportsSearch({ searchText, onSearchChange }) {
   return (
-    <section className="panel-card">
-      <h2 className="panel-title">Search &amp; Filter</h2>
-      <label className="search-label" htmlFor="reportSearch">Search Reports</label>
+    <section className="panel-card reports-panel-card reports-search-panel">
+      <h2 className="reports-panel-title">Search &amp; Filter</h2>
+      <label className="search-label" htmlFor="reportSearch">
+        Search Reports
+      </label>
 
       <div className="search-input-wrapper">
         <MagnifyingGlassIcon className="search-icon" size={18} />
