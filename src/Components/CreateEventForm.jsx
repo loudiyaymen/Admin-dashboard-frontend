@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   XIcon,
   CalendarBlankIcon,
@@ -7,40 +7,84 @@ import {
   UserIcon,
   CheckCircleIcon,
   ImageSquareIcon,
-  CaretDownIcon
-} from '@phosphor-icons/react';
+  CaretDownIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react";
 
 const requiredFields = [
-  'title',
-  'date',
-  'time',
-  'type',
-  'registrationStartDate',
-  'registrationStartTime',
-  'registrationEndDate',
-  'registrationEndTime',
-  'description'
+  "title",
+  "date",
+  "time",
+  "type",
+  "registrationStartDate",
+  "registrationStartTime",
+  "registrationEndDate",
+  "registrationEndTime",
+  "description",
 ];
 
-function CreateEventForm({ onClose }) {
-  const [formData, setFormData] = useState({
-    title: '',
-    date: '',
-    time: '',
-    type: '',
-    location: '',
-    registrationStartDate: '',
-    registrationStartTime: '',
-    registrationEndDate: '',
-    registrationEndTime: '',
-    maxParticipants: '',
-    unlimitedParticipants: false,
-    description: '',
-    url: '',
-    fee: '',
-    noFee: false,
-    eventImage: null
-  });
+function buildFormData(initialData) {
+  if (!initialData) {
+    return {
+      title: "",
+      date: "",
+      time: "",
+      type: "",
+      location: "",
+      registrationStartDate: "",
+      registrationStartTime: "",
+      registrationEndDate: "",
+      registrationEndTime: "",
+      maxParticipants: "",
+      unlimitedParticipants: false,
+      description: "",
+      url: "",
+      fee: "",
+      noFee: false,
+      eventImage: null,
+    };
+  }
+
+  const unlimitedParticipants =
+    String(initialData.capacity || "").toLowerCase() === "unlimited";
+
+  return {
+    title: initialData.title || "",
+    date: initialData.date || "",
+    time: initialData.time || "",
+    type: initialData.type || "",
+    location: initialData.location || "",
+    registrationStartDate:
+      initialData.registrationStartDate || initialData.date || "",
+    registrationStartTime:
+      initialData.registrationStartTime || initialData.time || "",
+    registrationEndDate:
+      initialData.registrationEndDate || initialData.date || "",
+    registrationEndTime:
+      initialData.registrationEndTime || initialData.time || "",
+    maxParticipants: unlimitedParticipants
+      ? ""
+      : String(initialData.capacity || "").replace(" max", ""),
+    unlimitedParticipants,
+    description: initialData.details || "",
+    url: initialData.url || "",
+    fee:
+      initialData.eventFee && initialData.eventFee.toLowerCase() !== "no fee"
+        ? initialData.eventFee.replace("$", "")
+        : "",
+    noFee:
+      !initialData.eventFee || initialData.eventFee.toLowerCase() === "no fee",
+    eventImage: null,
+  };
+}
+
+function CreateEventForm({
+  onClose,
+  mode = "create",
+  initialData = null,
+  onSubmitEvent,
+}) {
+  const [formData, setFormData] = useState(() => buildFormData(initialData));
 
   const [errors, setErrors] = useState({});
   const [showConfirm, setShowConfirm] = useState(false);
@@ -48,27 +92,29 @@ function CreateEventForm({ onClose }) {
   function handleChange(event) {
     const { name, value, type, checked, files } = event.target;
 
-    if (type === 'checkbox') {
+    if (type === "checkbox") {
       setFormData((prev) => ({
         ...prev,
         [name]: checked,
-        ...(name === 'unlimitedParticipants' && checked ? { maxParticipants: '' } : {}),
-        ...(name === 'noFee' && checked ? { fee: '' } : {})
+        ...(name === "unlimitedParticipants" && checked
+          ? { maxParticipants: "" }
+          : {}),
+        ...(name === "noFee" && checked ? { fee: "" } : {}),
       }));
       return;
     }
 
-    if (type === 'file') {
+    if (type === "file") {
       setFormData((prev) => ({
         ...prev,
-        eventImage: files[0] || null
+        eventImage: files[0] || null,
       }));
       return;
     }
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   }
 
@@ -101,14 +147,46 @@ function CreateEventForm({ onClose }) {
     setShowConfirm(true);
   }
 
-  function handleConfirmCreate() {
-    alert('Event created successfully.');
+  function handleConfirmSubmit() {
+    const updatedEvent = {
+      ...(initialData || {}),
+      title: formData.title,
+      date: formData.date,
+      time: formData.time,
+      type: formData.type,
+      location: formData.location,
+      schedule: `${formData.date} at ${formData.time}`,
+      capacity: formData.unlimitedParticipants
+        ? "Unlimited"
+        : `${formData.maxParticipants} max`,
+      details: formData.description,
+      eventFee: formData.noFee ? "No fee" : `$${formData.fee}`,
+      registrationStartDate: formData.registrationStartDate,
+      registrationStartTime: formData.registrationStartTime,
+      registrationEndDate: formData.registrationEndDate,
+      registrationEndTime: formData.registrationEndTime,
+      url: formData.url,
+    };
+
+    if (onSubmitEvent) {
+      onSubmitEvent({
+        mode,
+        event: updatedEvent,
+      });
+    } else {
+      alert(
+        mode === "edit"
+          ? "Event edited successfully."
+          : "Event created successfully.",
+      );
+    }
+
     setShowConfirm(false);
     onClose();
   }
 
   function getInputClass(field) {
-    return errors[field] ? 'event-input event-input-error' : 'event-input';
+    return errors[field] ? "event-input event-input-error" : "event-input";
   }
 
   return (
@@ -116,8 +194,12 @@ function CreateEventForm({ onClose }) {
       <div className="event-modal-overlay" onClick={onClose}>
         <div className="event-modal" onClick={(e) => e.stopPropagation()}>
           <div className="event-modal-header">
-            <h2>Add New Event</h2>
-            <button type="button" className="event-close-button" onClick={onClose}>
+            <h2>{mode === "edit" ? "Edit Event" : "Add New Event"}</h2>
+            <button
+              type="button"
+              className="event-close-button"
+              onClick={onClose}
+            >
               <XIcon size={24} />
             </button>
           </div>
@@ -128,7 +210,7 @@ function CreateEventForm({ onClose }) {
               required
               input={
                 <input
-                  className={getInputClass('title')}
+                  className={getInputClass("title")}
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
@@ -141,10 +223,12 @@ function CreateEventForm({ onClose }) {
               <IconField
                 label="Date"
                 required
-                icon={<CalendarBlankIcon size={20} className="event-field-icon" />}
+                icon={
+                  <CalendarBlankIcon size={20} className="event-field-icon" />
+                }
                 input={
                   <input
-                    className={getInputClass('date')}
+                    className={getInputClass("date")}
                     name="date"
                     value={formData.date}
                     onChange={handleChange}
@@ -159,7 +243,7 @@ function CreateEventForm({ onClose }) {
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
-                    className={getInputClass('time')}
+                    className={getInputClass("time")}
                     name="time"
                     value={formData.time}
                     onChange={handleChange}
@@ -175,7 +259,7 @@ function CreateEventForm({ onClose }) {
               input={
                 <div className="select-wrapper">
                   <select
-                    className={getInputClass('type')}
+                    className={getInputClass("type")}
                     name="type"
                     value={formData.type}
                     onChange={handleChange}
@@ -209,10 +293,12 @@ function CreateEventForm({ onClose }) {
               <IconField
                 label="Registration Starting Date"
                 required
-                icon={<CalendarBlankIcon size={20} className="event-field-icon" />}
+                icon={
+                  <CalendarBlankIcon size={20} className="event-field-icon" />
+                }
                 input={
                   <input
-                    className={getInputClass('registrationStartDate')}
+                    className={getInputClass("registrationStartDate")}
                     name="registrationStartDate"
                     value={formData.registrationStartDate}
                     onChange={handleChange}
@@ -227,7 +313,7 @@ function CreateEventForm({ onClose }) {
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
-                    className={getInputClass('registrationStartTime')}
+                    className={getInputClass("registrationStartTime")}
                     name="registrationStartTime"
                     value={formData.registrationStartTime}
                     onChange={handleChange}
@@ -241,10 +327,12 @@ function CreateEventForm({ onClose }) {
               <IconField
                 label="Registration Ending Date"
                 required
-                icon={<CalendarBlankIcon size={20} className="event-field-icon" />}
+                icon={
+                  <CalendarBlankIcon size={20} className="event-field-icon" />
+                }
                 input={
                   <input
-                    className={getInputClass('registrationEndDate')}
+                    className={getInputClass("registrationEndDate")}
                     name="registrationEndDate"
                     value={formData.registrationEndDate}
                     onChange={handleChange}
@@ -259,7 +347,7 @@ function CreateEventForm({ onClose }) {
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
-                    className={getInputClass('registrationEndTime')}
+                    className={getInputClass("registrationEndTime")}
                     name="registrationEndTime"
                     value={formData.registrationEndTime}
                     onChange={handleChange}
@@ -275,7 +363,7 @@ function CreateEventForm({ onClose }) {
               icon={<UserIcon size={20} className="event-field-icon" />}
               input={
                 <input
-                  className={getInputClass('maxParticipants')}
+                  className={getInputClass("maxParticipants")}
                   name="maxParticipants"
                   value={formData.maxParticipants}
                   onChange={handleChange}
@@ -297,7 +385,7 @@ function CreateEventForm({ onClose }) {
               required
               input={
                 <textarea
-                  className={getInputClass('description')}
+                  className={getInputClass("description")}
                   name="description"
                   rows="6"
                   value={formData.description}
@@ -325,7 +413,7 @@ function CreateEventForm({ onClose }) {
               required={!formData.noFee}
               input={
                 <input
-                  className={getInputClass('fee')}
+                  className={getInputClass("fee")}
                   name="fee"
                   value={formData.fee}
                   onChange={handleChange}
@@ -355,50 +443,118 @@ function CreateEventForm({ onClose }) {
                     hidden
                   />
                   <ImageSquareIcon size={28} />
-                  <span>{formData.eventImage ? formData.eventImage.name : 'Add Photo or Video'}</span>
+                  <span>
+                    {formData.eventImage
+                      ? formData.eventImage.name
+                      : "Add Photo or Video"}
+                  </span>
                 </label>
               }
             />
 
             <div className="event-modal-actions">
-              <button type="button" className="event-cancel-button" onClick={onClose}>
+              <button
+                type="button"
+                className="event-cancel-button"
+                onClick={onClose}
+              >
                 Cancel
               </button>
 
               <button type="submit" className="event-submit-button">
                 <CheckCircleIcon size={20} />
-                <span>Create event</span>
+                <span>{mode === "edit" ? "Edit event" : "Create event"}</span>
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      {showConfirm && (
-        <div className="confirm-modal-overlay" onClick={() => setShowConfirm(false)}>
-          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Are you sure you want to create the event?</h3>
+      {showConfirm &&
+        (mode === "edit" ? (
+          <div
+            className="event-edit-confirm-overlay"
+            onClick={() => setShowConfirm(false)}
+          >
+            <div
+              className="event-edit-confirm-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="event-edit-confirm-content">
+                <div className="event-edit-confirm-icon">
+                  <WarningCircleIcon size={44} weight="fill" />
+                </div>
 
-            <div className="confirm-modal-actions">
-              <button
-                type="button"
-                className="event-cancel-button"
-                onClick={() => setShowConfirm(false)}
-              >
-                Cancel
-              </button>
+                <div className="event-edit-confirm-copy">
+                  <h2>Confirm edition</h2>
+                  <p>Are you sure you want to edit this event?</p>
+                </div>
 
-              <button
-                type="button"
-                className="event-submit-button"
-                onClick={handleConfirmCreate}
-              >
-                Yes, Create
-              </button>
+                <div className="event-edit-fields-card">
+                  <h3>Edited fields</h3>
+                  <h4>Title</h4>
+
+                  <div className="event-edit-fields-grid">
+                    <div>
+                      <span>Previous</span>
+                      <p>{initialData?.title || "-"}</p>
+                    </div>
+                    <div>
+                      <span>New</span>
+                      <p>{formData.title || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="event-edit-confirm-actions">
+                  <button
+                    type="button"
+                    className="event-cancel-button"
+                    onClick={() => setShowConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className="event-submit-button"
+                    onClick={handleConfirmSubmit}
+                  >
+                    <CheckCircleIcon size={20} />
+                    <span>Confirm edition</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div
+            className="confirm-modal-overlay"
+            onClick={() => setShowConfirm(false)}
+          >
+            <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <h3>Are you sure you want to create the event?</h3>
+
+              <div className="confirm-modal-actions">
+                <button
+                  type="button"
+                  className="event-cancel-button"
+                  onClick={() => setShowConfirm(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="event-submit-button"
+                  onClick={handleConfirmSubmit}
+                >
+                  Yes, Create
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
     </>
   );
 }
@@ -431,7 +587,12 @@ function IconField({ label, required = false, icon, input }) {
 function CheckRow({ name, checked, onChange, text }) {
   return (
     <label className="event-check-row">
-      <input type="checkbox" name={name} checked={checked} onChange={onChange} />
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+      />
       <span>{text}</span>
     </label>
   );
