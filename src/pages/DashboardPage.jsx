@@ -3,17 +3,72 @@ import {
   FileTextIcon,
   WarningCircleIcon,
   SirenIcon,
-  UserIcon
-} from '@phosphor-icons/react';
-import AdminHeader from '../Components/AdminHeader';
-import Sidebar from '../Components/Sidebar';
+  UserIcon,
+} from "@phosphor-icons/react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import AdminHeader from "../Components/AdminHeader";
+import Sidebar from "../Components/Sidebar";
 
-function DashboardPage({ activePage, onNavigate }) {
+const defaultActivityOverviewData = [
+  { day: "Day 1", value: 42 },
+  { day: "Day 5", value: 61 },
+  { day: "Day 10", value: 53 },
+  { day: "Day 15", value: 74 },
+  { day: "Day 20", value: 68 },
+  { day: "Day 25", value: 86 },
+  { day: "Day 30", value: 93 },
+];
+
+const defaultActiveUsersTrendData = [
+  { day: "W1", value: 1820 },
+  { day: "W2", value: 1940 },
+  { day: "W3", value: 2080 },
+  { day: "W4", value: 2210 },
+  { day: "W5", value: 2380 },
+  { day: "W6", value: 2520 },
+  { day: "W7", value: 2680 },
+  { day: "W8", value: 2845 },
+];
+
+function DashboardPage({
+  activePage,
+  onNavigate,
+  activityOverviewData = defaultActivityOverviewData,
+  activeUsersTrendData = defaultActiveUsersTrendData,
+}) {
   const statusItems = [
-    { label: 'Mobile App Users', value: '2,845', width: '90%', className: 'status-bar-gold' },
-    { label: 'System Health', value: '98.5%', width: '98.5%', className: 'status-bar-green' },
-    { label: 'Alert Response Rate', value: '94%', width: '94%', className: 'status-bar-red' },
-    { label: 'Report Resolution', value: '87%', width: '87%', className: 'status-bar-darkgreen' }
+    {
+      label: "Mobile App Users",
+      value: "2,845",
+      width: "90%",
+      className: "status-bar-gold",
+    },
+    {
+      label: "System Health",
+      value: "98.5%",
+      width: "98.5%",
+      className: "status-bar-green",
+    },
+    {
+      label: "Alert Response Rate",
+      value: "94%",
+      width: "94%",
+      className: "status-bar-red",
+    },
+    {
+      label: "Report Resolution",
+      value: "87%",
+      width: "87%",
+      className: "status-bar-darkgreen",
+    },
   ];
 
   return (
@@ -70,46 +125,41 @@ function DashboardPage({ activePage, onNavigate }) {
           <section className="dashboard-chart-card">
             <h2>Activity Overview (Last 30 Days)</h2>
             <div className="dashboard-chart-placeholder">
-              <svg viewBox="0 0 900 220" className="dashboard-svg-chart">
-                <line x1="60" y1="20" x2="60" y2="190" className="chart-axis" />
-                <line x1="60" y1="190" x2="860" y2="190" className="chart-axis" />
-
-                {[...Array(6)].map((_, index) => (
-                  <line
-                    key={`h-${index}`}
-                    x1="60"
-                    y1={20 + index * 34}
-                    x2="860"
-                    y2={20 + index * 34}
-                    className="chart-grid-line"
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={activityOverviewData}
+                  margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
+                >
+                  <CartesianGrid stroke="#d7d7d7" strokeDasharray="4 4" />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fill: "#7d7d7d", fontSize: 12 }}
+                    axisLine={{ stroke: "#7d7d7d" }}
+                    tickLine={false}
                   />
-                ))}
-
-                {[...Array(16)].map((_, index) => (
-                  <line
-                    key={`v-${index}`}
-                    x1={60 + index * 50}
-                    y1="20"
-                    x2={60 + index * 50}
-                    y2="190"
-                    className="chart-grid-line"
+                  <YAxis
+                    tick={{ fill: "#7d7d7d", fontSize: 12 }}
+                    axisLine={{ stroke: "#7d7d7d" }}
+                    tickLine={false}
                   />
-                ))}
-
-                <path
-                  d="M60 120
-                     C90 80, 120 140, 150 95
-                     S210 140, 240 85
-                     S300 120, 330 80
-                     S390 130, 420 90
-                     S480 120, 510 75
-                     S570 115, 600 85
-                     S660 125, 690 82
-                     S750 110, 780 88
-                     S840 115, 860 72"
-                  className="chart-line-orange"
-                />
-              </svg>
+                  <Tooltip
+                    cursor={{ stroke: "#c6c9cc", strokeWidth: 1 }}
+                    contentStyle={{
+                      borderRadius: 12,
+                      borderColor: "#c6c9cc",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#c98500"
+                    strokeWidth={3}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </section>
 
@@ -125,45 +175,42 @@ function DashboardPage({ activePage, onNavigate }) {
               </div>
 
               <div className="dashboard-chart-placeholder small">
-                <svg viewBox="0 0 420 220" className="dashboard-svg-chart">
-                  <line x1="40" y1="20" x2="40" y2="190" className="chart-axis" />
-                  <line x1="40" y1="190" x2="390" y2="190" className="chart-axis" />
-
-                  {[...Array(5)].map((_, index) => (
-                    <line
-                      key={`grid-${index}`}
-                      x1="40"
-                      y1={20 + index * 42}
-                      x2="390"
-                      y2={20 + index * 42}
-                      className="chart-grid-line"
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={activeUsersTrendData}
+                    margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
+                  >
+                    <CartesianGrid stroke="#d7d7d7" strokeDasharray="4 4" />
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fill: "#7d7d7d", fontSize: 12 }}
+                      axisLine={{ stroke: "#7d7d7d" }}
+                      tickLine={false}
                     />
-                  ))}
-
-                  {[...Array(6)].map((_, index) => (
-                    <line
-                      key={`gridv-${index}`}
-                      x1={40 + index * 70}
-                      y1="20"
-                      x2={40 + index * 70}
-                      y2="190"
-                      className="chart-grid-line"
+                    <YAxis
+                      tick={{ fill: "#7d7d7d", fontSize: 12 }}
+                      axisLine={{ stroke: "#7d7d7d" }}
+                      tickLine={false}
                     />
-                  ))}
-
-                  <polyline
-                    points="40,165 60,160 80,150 100,140 120,130 140,120 160,110 180,100 200,90 220,80 240,70 260,62 280,58 300,54 320,50 340,46 360,42 390,38"
-                    className="chart-line-blue"
-                  />
-
-                  {[
-                    [40, 165], [60, 160], [80, 150], [100, 140], [120, 130], [140, 120],
-                    [160, 110], [180, 100], [200, 90], [220, 80], [240, 70], [260, 62],
-                    [280, 58], [300, 54], [320, 50], [340, 46], [360, 42], [390, 38]
-                  ].map(([x, y], index) => (
-                    <circle key={index} cx={x} cy={y} r="4.5" className="chart-dot-blue" />
-                  ))}
-                </svg>
+                    <Tooltip
+                      cursor={{ stroke: "#c6c9cc", strokeWidth: 1 }}
+                      contentStyle={{
+                        borderRadius: 12,
+                        borderColor: "#c6c9cc",
+                        fontSize: 12,
+                        fontWeight: 500,
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#1b56b3"
+                      strokeWidth={3}
+                      dot={{ r: 4.5, fill: "#1b56b3", stroke: "#1b56b3" }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </section>
 
