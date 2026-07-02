@@ -16,6 +16,8 @@ import {
 } from "recharts";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
+import { connectSocket, onSOSActive, disconnectSocket } from "../services/socketService";
+import { useEffect } from "react";
 
 const defaultActivityOverviewData = [
   { day: "Day 1", value: 42 },
@@ -44,6 +46,15 @@ function DashboardPage({
   activityOverviewData = defaultActivityOverviewData,
   activeUsersTrendData = defaultActiveUsersTrendData,
 }) {
+    useEffect(() => {
+      connectSocket();
+      onSOSActive((data) => {
+        console.log("SOS received: ", data);
+        // logic for sos event etc goes here btw
+      });
+      return () => disconnectSocket();
+    }, []);
+
   const statusItems = [
     {
       label: "Mobile App Users",
