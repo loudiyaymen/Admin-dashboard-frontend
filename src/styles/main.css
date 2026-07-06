@@ -75,6 +75,7 @@
   padding: 0 24px 22px;
   font-size: var(--text-lg);
   font-weight: var(--font-bold);
+   white-space: nowrap;
 }
 
 .sidebar-nav {
@@ -384,6 +385,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 78px 16px;
+  align-self: start;
 }
 
 .reports-analytics-card {
@@ -395,9 +398,9 @@
 
 .reports-analytics-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 14px;
   line-height: 1.4;
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-medium);
 }
 
 .reports-analytics-item {
@@ -411,15 +414,15 @@
 }
 
 .reports-analytics-item h3 {
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   line-height: 1.4;
-  font-weight: 400;
+  font-weight: 300;
   color: var(--color-text-deep-slate);
 }
 
 .reports-analytics-item strong {
   display: block;
-  font-size: 44px;
+  font-size: 36px;
   line-height: 1.15;
   font-weight: var(--font-semibold);
   color: #1f2937;
@@ -452,7 +455,7 @@
 }
 
 .reports-distribution-chart-wrap {
-  height: 64px;
+  height: 75px;
 }
 
 .reports-resolution-chart-wrap {
@@ -822,7 +825,7 @@
 }
 
 .event-section-card {
-  border: 1px solid var(--color-secondary);
+  border: 1px solid var(--color-secondary-deep-slate);
   padding: 16px 20px;
   margin-bottom: var(--space-lg);
 }

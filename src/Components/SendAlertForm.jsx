@@ -13,15 +13,59 @@ function SendAlertForm({ onClose }) {
     building: "",
     message: "",
   });
+
   const [modalStep, setModalStep] = useState("form");
+
+  const buildingOptions = [
+    "All Buildings",
+    "Building A",
+    "Building B",
+    "Building C",
+    "Library",
+    "Student Commons",
+  ];
+
+  function getAutoMessage(alertTitle, building) {
+    const selectedBuilding = building || "the selected location";
+
+    if (alertTitle === "Campus Weather Alert") {
+      return `Weather alert for ${selectedBuilding}. Please use caution and follow campus safety updates.`;
+    }
+
+    if (alertTitle === "Security Update") {
+      return `Security update for ${selectedBuilding}. Please stay alert and follow official campus guidance.`;
+    }
+
+    if (alertTitle === "Emergency Alert") {
+      return `Emergency alert for ${selectedBuilding}. Please follow safety instructions immediately.`;
+    }
+
+    if (alertTitle === "Event Reminder") {
+      return `Event reminder for ${selectedBuilding}. Please check the latest schedule and event details.`;
+    }
+
+    return "";
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
 
-    setFormData((currentData) => ({
-      ...currentData,
-      [name]: value,
-    }));
+    setFormData((currentData) => {
+      const updatedData = {
+        ...currentData,
+        [name]: value,
+      };
+
+      if (name === "alertTitle") {
+        updatedData.message = getAutoMessage(value, updatedData.building);
+      }
+
+      if (name === "building" && updatedData.alertTitle) {
+        updatedData.message = getAutoMessage(updatedData.alertTitle, value);
+      }
+
+      return updatedData;
+    });
   }
 
   function handleSubmit(event) {
@@ -30,9 +74,9 @@ function SendAlertForm({ onClose }) {
   }
 
   const isFormValid =
-    formData.alertTitle.trim() != "" &&
-    formData.building.trim() != "" &&
-    formData.message.trim() != "";
+    formData.alertTitle.trim() !== "" &&
+    formData.building.trim() !== "" &&
+    formData.message.trim() !== "";
 
   function handleCancelClick() {
     setModalStep("confirm-cancel");
@@ -49,7 +93,11 @@ function SendAlertForm({ onClose }) {
   return (
     <div className="alert-modal-overlay" onClick={onClose}>
       <div
-        className={`alert-modal ${modalStep !== "form" ? "alert-modal-confirm" : ""} ${modalStep === "confirm-send" ? "alert-modal-send" : ""} ${modalStep === "confirm-cancel" ? "alert-modal-cancel" : ""} ${modalStep === "sent-success" ? "alert-modal-success" : ""}`}
+        className={`alert-modal ${modalStep !== "form" ? "alert-modal-confirm" : ""} ${
+          modalStep === "confirm-send" ? "alert-modal-send" : ""
+        } ${modalStep === "confirm-cancel" ? "alert-modal-cancel" : ""} ${
+          modalStep === "sent-success" ? "alert-modal-success" : ""
+        }`}
         onClick={(event) => event.stopPropagation()}
       >
         {modalStep === "form" && (
@@ -97,14 +145,23 @@ function SendAlertForm({ onClose }) {
                   Building <span className="required-mark">*</span>
                 </span>
 
-                <input
-                  type="text"
-                  name="building"
-                  placeholder="Building"
-                  value={formData.building}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="select-wrapper">
+                  <select
+                    name="building"
+                    value={formData.building}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select a building</option>
+                    {buildingOptions.map((building) => (
+                      <option key={building} value={building}>
+                        {building}
+                      </option>
+                    ))}
+                  </select>
+
+                  <CaretDownIcon size={20} className="select-icon" />
+                </div>
               </label>
 
               <label className="alert-field">
@@ -227,10 +284,8 @@ function SendAlertForm({ onClose }) {
             <section className="alert-summary-card">
               <h3>Alert Summary</h3>
               <h4>{formData.alertTitle}</h4>
-              <p>
-                {formData.message ||
-                  `Please evacuate ${formData.building} immediately`}
-              </p>
+              <p>{formData.message}</p>
+
               <div className="alert-summary-meta">
                 <div>
                   <span>Delivery Method</span>
