@@ -1,6 +1,13 @@
 .admin-layout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
+}
+
+.admin-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
 }
 
 .admin-content {
@@ -16,6 +23,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.admin-header-brand {
+  color: #fff;
+  font-size: var(--text-lg);
+  line-height: 1;
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
 }
 
 .admin-header-right {
@@ -64,9 +79,10 @@
 
 .sidebar {
   width: 230px;
+  flex-shrink: 0;
   background: var(--color-primary);
   color: white;
-  padding-top: var(--space-sm);
+  padding-top: 18px;
   display: flex;
   flex-direction: column;
 }
@@ -74,8 +90,8 @@
 .sidebar-logo {
   padding: 0 24px 22px;
   font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-   white-space: nowrap;
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
 }
 
 .sidebar-nav {
@@ -93,7 +109,8 @@
   align-items: center;
   gap: var(--space-sm);
   text-align: left;
-  font-size: var(--text-md);
+  font-size: 17px;
+  font-weight: var(--font-medium);
 }
 
 .sidebar-link-active {
@@ -121,7 +138,9 @@
 
 .page-heading p {
   color: var(--color-text-secondary);
-  font-size: var(--text-md);
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .reports-page-content {
@@ -129,6 +148,7 @@
   grid-template-columns: minmax(0, 1fr) 300px;
   align-items: start;
   gap: 14px;
+  padding-top: 0;
 }
 
 .reports-panel-card {
@@ -146,8 +166,9 @@
 .reports-search-panel .search-label {
   display: block;
   margin-bottom: 8px;
-  font-size: var(--text-xs);
-  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
   color: var(--color-text-dark-grey);
 }
 
@@ -247,9 +268,9 @@
 
 .report-details-card h2 {
   margin: 0 0 var(--space-md);
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1.4;
-  font-weight: 400;
+  font-weight: var(--font-semibold);
 }
 
 .report-key-value-list {
@@ -266,16 +287,16 @@
 }
 
 .report-key {
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1.4;
-  font-weight: 400;
+  font-weight: 600;
   color: #111;
 }
 
 .report-value {
   font-size: 16px;
   line-height: 1.5;
-  font-weight: 300;
+  font-weight: 400;
   color: #1f2937;
   text-align: right;
 }
@@ -294,9 +315,9 @@
 
 .report-detail-field h3 {
   margin: 0 0 2px;
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1.4;
-  font-weight: 400;
+  font-weight: 600;
   color: #111;
 }
 
@@ -304,7 +325,7 @@
   margin: 0;
   font-size: 16px;
   line-height: 1.5;
-  font-weight: 300;
+  font-weight: 400;
   color: #1f2937;
 }
 
@@ -385,7 +406,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 78px 16px;
   align-self: start;
 }
 
@@ -398,9 +418,9 @@
 
 .reports-analytics-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.4;
-  font-weight: var(--font-medium);
+  font-weight: var(--font-semibold);
 }
 
 .reports-analytics-item {
@@ -414,9 +434,9 @@
 }
 
 .reports-analytics-item h3 {
-  font-size: var(--text-sm);
+  font-size: 16px;
   line-height: 1.4;
-  font-weight: 300;
+  font-weight: var(--font-medium);
   color: var(--color-text-deep-slate);
 }
 
@@ -443,6 +463,20 @@
 .reports-distribution-card,
 .reports-resolution-card {
   padding-top: 12px;
+}
+
+.reports-distribution-card,
+.reports-resolution-card,
+.reports-distribution-card .reports-chart-wrap,
+.reports-resolution-card .reports-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.reports-distribution-chart-wrap .recharts-wrapper,
+.reports-distribution-chart-wrap .recharts-surface {
+  margin-left: 0;
 }
 
 .reports-distribution-card .reports-analytics-title,
@@ -698,7 +732,7 @@
 }
 
 .navigation-tab-button.active {
-  background: #004f38;
+  background: var(--color-secondary);
   color: white;
   border: none;
 }
@@ -825,7 +859,7 @@
 }
 
 .event-section-card {
-  border: 1px solid var(--color-secondary-deep-slate);
+  border: 1px solid var(--color-secondary);
   padding: 16px 20px;
   margin-bottom: var(--space-lg);
 }
@@ -911,13 +945,20 @@
   font-weight: 400;
 }
 
-
 .pagination {
-  margin-top: 18px;
+  margin: 18px 24px 24px;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 14px;
+}
+
+.notification-search-wrap {
+  margin: 0 24px 14px;
+}
+
+.notification-search {
+  max-width: 420px;
 }
 
 .pagination button {
@@ -1047,7 +1088,7 @@
 .event-details-label {
   font-size: 20px;
   line-height: 1.4;
-  font-weight: 400;
+  font-weight: var(--font-medium);
   color: #111;
 }
 
@@ -1098,7 +1139,7 @@
   border-bottom: 1px solid var(--color-border);
   font-size: 20px;
   line-height: 1.4;
-  font-weight: 400;
+  font-weight: var(--font-semibold);
 }
 
 .event-participants-header span:last-child,
@@ -1327,6 +1368,8 @@
 }
 
 .event-submit-button {
+  border: none;
+  box-shadow: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1404,7 +1447,7 @@
 }
 
 .report-resolve-icon.success {
-  background: var(--color-secondary);
+  background: var(--color-primary);
 }
 
 .report-resolve-copy {
@@ -1450,7 +1493,7 @@
 
 .report-resolve-confirm {
   border: none;
-  background: var(--color-secondary);
+  background: var(--color-primary);
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -1572,6 +1615,14 @@
   margin-bottom: 4px;
 }
 
+.event-edit-fields-label-previous {
+  font-weight: 400;
+}
+
+.event-edit-fields-label-new {
+  font-weight: 600;
+}
+
 .event-edit-fields-grid p {
   font-size: 20px;
   line-height: 1.4;
@@ -1580,15 +1631,15 @@
 }
 
 .event-edit-confirm-actions {
-  width: 100%;
+  width: 92%;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 
 .event-edit-confirm-actions .event-cancel-button {
-  width: auto;
-  padding: 0 38px;
+  width: 100%;
+  padding: 0 24px;
 }
 
 .event-edit-confirm-actions .event-submit-button {
@@ -1598,11 +1649,38 @@
 }
 
 .event-edit-confirm-actions .event-submit-button,
-.event-edit-confirm-actions .event-submit-button:hover,
 .event-edit-confirm-actions .event-submit-button:focus,
 .event-edit-confirm-actions .event-submit-button:focus-visible {
   border: none;
   box-shadow: none;
+}
+
+.event-edit-confirm-icon-success {
+  background: var(--color-primary);
+}
+
+.event-edit-confirm-actions-single {
+  grid-template-columns: 1fr;
+}
+
+.event-create-confirm-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-create-confirm-icon-success {
+  background: var(--color-primary);
+}
+
+.confirm-modal-actions-single {
+  grid-template-columns: 1fr;
 }
 
 .alert-modal-confirm {
@@ -1856,13 +1934,15 @@
 }
 
 .alert-modal-success .alert-modal-actions {
-  width: 100%;
-  grid-template-columns: 1fr;
+  width: fit-content;
+  grid-template-columns: auto;
+  margin: 0 auto;
 }
 
 .alert-modal-success .alert-cancel-button,
 .alert-modal-success .alert-submit-button {
-  width: 100%;
+  width: auto;
+  min-width: 260px;
 }
 
 .alert-modal-cancel .alert-cancel-button {
@@ -1883,6 +1963,56 @@
   gap: 10px;
   font-size: 20px;
   line-height: 1.4;
+}
+
+.sidebar-link,
+.event-add-button,
+.create-alert-button,
+.event-link-button,
+.event-submit-button,
+.event-cancel-button,
+.alert-submit-button,
+.alert-cancel-button,
+.report-row,
+.report-resolve-button,
+.report-resolve-confirm,
+.report-resolve-cancel {
+  transition: all 0.2s ease;
+}
+
+.event-add-button,
+.create-alert-button,
+.event-submit-button,
+.event-cancel-button,
+.alert-submit-button,
+.alert-cancel-button,
+.report-resolve-button,
+.report-resolve-confirm,
+.report-resolve-cancel {
+  outline: none;
+}
+
+.event-add-button:focus-visible,
+.create-alert-button:focus-visible,
+.event-cancel-button:focus-visible,
+.alert-submit-button:focus-visible,
+.alert-cancel-button:focus-visible,
+.report-resolve-button:focus-visible,
+.report-resolve-confirm:focus-visible,
+.report-resolve-cancel:focus-visible,
+.sidebar-link:focus-visible,
+.report-row:focus-visible,
+.event-link-button:focus-visible {
+  outline: 2px solid rgba(18, 50, 41, 0.35);
+  outline-offset: 2px;
+}
+
+.event-submit-button:focus,
+.event-submit-button:focus-visible,
+.confirm-modal .event-submit-button:focus,
+.confirm-modal .event-submit-button:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .alert-summary-card {
