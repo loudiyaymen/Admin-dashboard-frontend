@@ -226,45 +226,49 @@ function ReportsPage({ activePage, onNavigate }) {
 
   return (
     <div className="admin-layout">
-      <Sidebar activePage={activePage} onNavigate={onNavigate} />
+      <AdminHeader />
 
-      <main className="admin-content">
-        <AdminHeader />
+      <div className="admin-body">
+        <Sidebar activePage={activePage} onNavigate={onNavigate} />
 
-        {selectedReport ? (
-          <ReportDetailsModal
-            report={selectedReport}
-            onBack={handleBackToReports}
-            onMarkResolved={handleMarkResolved}
-          />
-        ) : (
-          <div className="reports-page-content">
-            <section>
-              <div className="page-heading">
+        <main className="admin-content">
+          {selectedReport ? (
+            <ReportDetailsModal
+              report={selectedReport}
+              onBack={handleBackToReports}
+              onMarkResolved={handleMarkResolved}
+            />
+          ) : (
+            <>
+              <div className="standard-page-content page-heading">
                 <h1>User Reports</h1>
                 <p>Review and manage user-submitted reports.</p>
               </div>
 
-              <ReportsSearch
-                searchText={searchText}
-                onSearchChange={handleSearchChange}
-              />
-              <ReportInbox
-                reports={reports}
-                onSelectReport={handleSelectReport}
-              />
-            </section>
+              <div className="reports-page-content">
+                <section>
+                  <ReportsSearch
+                    searchText={searchText}
+                    onSearchChange={handleSearchChange}
+                  />
+                  <ReportInbox
+                    reports={reports}
+                    onSelectReport={handleSelectReport}
+                  />
+                </section>
 
-            <aside className="analytics-column">
-              <ReportsAnalytics
-                analyticsSummary={analyticsSummary}
-                distributionData={distributionData}
-                resolutionRateData={resolutionRateData}
-              />
-            </aside>
-          </div>
-        )}
-      </main>
+                <aside className="analytics-column">
+                  <ReportsAnalytics
+                    analyticsSummary={analyticsSummary}
+                    distributionData={distributionData}
+                    resolutionRateData={resolutionRateData}
+                  />
+                </aside>
+              </div>
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

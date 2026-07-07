@@ -28,8 +28,8 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
   const detailRows = [
     { label: "Incident details", value: report.details.incidentDetails },
     { label: "Location", value: report.details.location },
-    { label: "Date of incident", value: report.details.dateOfIncident },
-    { label: "Time of incident", value: report.details.timeOfIncident },
+    { label: "Date", value: report.details.dateOfIncident },
+    { label: "Time", value: report.details.timeOfIncident },
   ];
 
   const isResolved = report.status.toLowerCase() === "resolved";

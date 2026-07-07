@@ -16,6 +16,14 @@ const categoryColorMap = {
   "lost item": "var(--color-report-lost-item)",
 };
 
+function renderDistributionAxisTick({ x, y, payload }) {
+  return (
+    <text x={x - 88} y={y} dy={4} fill="#222" fontSize={14} textAnchor="start">
+      {payload.value}
+    </text>
+  );
+}
+
 function renderDistributionBarShape(props) {
   const { x, y, width, height, payload } = props;
   const fillColor = payload?.color || "var(--color-text-secondary)";
@@ -88,14 +96,14 @@ function ReportsAnalytics({
             <BarChart
               data={distributionChartData}
               layout="vertical"
-              margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
+              margin={{ top: 4, right: 12, bottom: 0, left: 4 }}
             >
               <XAxis type="number" hide domain={[0, "dataMax"]} />
               <YAxis
                 type="category"
                 dataKey="label"
-                width={80}
-                tick={{ fill: "#222", fontSize: 14 }}
+                width={96}
+                tick={renderDistributionAxisTick}
                 axisLine={false}
                 tickLine={false}
               />
@@ -131,7 +139,7 @@ function ReportsAnalytics({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={resolutionRateData}
-              margin={{ top: 8, right: 10, left: -18, bottom: 0 }}
+              margin={{ top: 8, right: 10, left: 8, bottom: 0 }}
             >
               <CartesianGrid stroke="#d7d7d7" strokeDasharray="4 4" />
               <XAxis
@@ -145,7 +153,7 @@ function ReportsAnalytics({
                 tick={{ fill: "#6c7278", fontSize: 10 }}
                 axisLine={{ stroke: "#7d7d7d" }}
                 tickLine={false}
-                width={28}
+                width={36}
               />
               <Tooltip
                 cursor={{ stroke: "#c6c9cc", strokeWidth: 1 }}
