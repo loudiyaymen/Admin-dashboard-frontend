@@ -1317,7 +1317,9 @@
 .search-input-wrapper {
   position: relative;
 }
-
+.notification-search-wrap {
+  display: none;
+}
 .search-icon {
   top: 14px;
   left: 14px;

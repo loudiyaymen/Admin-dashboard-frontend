@@ -3,7 +3,7 @@ import {
   ChatCircleIcon,
   FileTextIcon,
   SquaresFourIcon,
-  WarningIcon,
+  SirenIcon,
   MapPinIcon,
   GearIcon,
   DeviceMobileIcon,
@@ -45,7 +45,7 @@ function Sidebar({ activePage, onNavigate }) {
           className={`sidebar-link ${activePage === "emergency" ? "sidebar-link-active" : ""}`}
           onClick={() => onNavigate("emergency")}
         >
-          <WarningIcon size={20} />
+          <SirenIcon size={20} />
           <span>Emergency</span>
         </button>
 
@@ -67,15 +67,15 @@ function Sidebar({ activePage, onNavigate }) {
           <span>Events</span>
         </button>
 
-        <button type="button" className="sidebar-link sidebar-link-secondary">
+        {/* <button type="button" className="sidebar-link sidebar-link-secondary">
           <DeviceMobileIcon size={20} />
           <span>App Management</span>
-        </button>
+        </button> */}
 
-        <button type="button" className="sidebar-link sidebar-link-secondary">
+        {/* <button type="button" className="sidebar-link sidebar-link-secondary">
           <GearIcon size={20} />
           <span>Settings</span>
-        </button>
+        </button> */}
       </nav>
     </aside>
   );
