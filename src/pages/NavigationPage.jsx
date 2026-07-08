@@ -5,24 +5,27 @@ import {
   StackIcon,
   FireExtinguisherIcon,
   ShieldCheckIcon,
-  SirenIcon
-} from '@phosphor-icons/react';
-import AdminHeader from '../Components/AdminHeader';
-import Sidebar from '../Components/Sidebar';
-import campusMap from '../assets/campus-map.png';
+  SirenIcon,
+} from "@phosphor-icons/react";
+import AdminHeader from "../Components/AdminHeader";
+import Sidebar from "../Components/Sidebar";
+import campusMap from "../assets/campus-map.png";
 
 function NavigationPage({ activePage, onNavigate }) {
   return (
     <div className="admin-layout">
-      <Sidebar activePage={activePage} onNavigate={onNavigate} />
+      <AdminHeader />
 
-      <main className="admin-content">
-        <AdminHeader />
+      <div className="admin-body">
+        <Sidebar activePage={activePage} onNavigate={onNavigate} />
 
-        <div className="standard-page-content">
+        <main className="admin-content">
+          <div className="standard-page-content">
           <div className="page-heading">
             <h1>Campus Map</h1>
-            <p>Interactive campus map with floor plans and emergency locations</p>
+            <p>
+              Interactive campus map with floor plans and emergency locations
+            </p>
           </div>
 
           <section className="navigation-tabs-card">
@@ -79,8 +82,9 @@ function NavigationPage({ activePage, onNavigate }) {
               <p>18</p>
             </section>
           </div>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

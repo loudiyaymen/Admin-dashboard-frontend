@@ -182,7 +182,8 @@ function EventsPage({ activePage, onNavigate }) {
             : currentEvent,
         ),
       );
-      return;
+      setSelectedUpcomingEventId(event.id);
+      return { updatedEventId: event.id };
     }
 
     const nextId =
@@ -201,179 +202,186 @@ function EventsPage({ activePage, onNavigate }) {
         coverImage: event.coverImage || safetyDrillImage,
       },
     ]);
+
+    setSelectedUpcomingEventId(nextId);
+    return { createdEventId: nextId };
   }
 
   return (
     <div className="admin-layout">
-      <Sidebar activePage={activePage} onNavigate={onNavigate} />
-      <main className="admin-content">
-        <AdminHeader />
-        <div className="standard-page-content">
-          {selectedUpcomingEvent ? (
-            <section className="event-details-page">
-              <button
-                type="button"
-                className="event-details-back-link"
-                onClick={() => setSelectedUpcomingEventId(null)}
-              >
-                <ArrowLeftIcon size={16} />
-                <span>Back to Events</span>
-              </button>
+      <AdminHeader />
 
-              <h1 className="event-details-page-title">
-                {selectedUpcomingEvent.title}
-              </h1>
+      <div className="admin-body">
+        <Sidebar activePage={activePage} onNavigate={onNavigate} />
 
-              <section className="event-details-card">
-                <div className="event-details-card-header">
-                  <h2>Event Details</h2>
-                  <button
-                    type="button"
-                    className="event-add-button"
-                    onClick={handleEditButtonClick}
-                  >
-                    <PencilSimpleIcon size={16} />
-                    <span>Edit event</span>
-                  </button>
-                </div>
+        <main className="admin-content">
+          <div className="standard-page-content">
+            {selectedUpcomingEvent ? (
+              <section className="event-details-page">
+                <button
+                  type="button"
+                  className="event-details-back-link"
+                  onClick={() => setSelectedUpcomingEventId(null)}
+                >
+                  <ArrowLeftIcon size={16} />
+                  <span>Back to Events</span>
+                </button>
 
-                <div className="event-details-info-list">
-                  {selectedEventInfoRows.map((row) => (
-                    <div key={row.label} className="event-details-info-row">
-                      <span className="event-details-label">{row.label}</span>
-                      <span className="event-details-value">{row.value}</span>
-                    </div>
-                  ))}
-                </div>
+                <h1 className="event-details-page-title">
+                  {selectedUpcomingEvent.title}
+                </h1>
 
-                <div className="event-details-cover">
-                  <h3>Cover image</h3>
-                  <img
-                    src={selectedUpcomingEvent.coverImage}
-                    alt={`${selectedUpcomingEvent.title} cover`}
-                  />
-                </div>
-              </section>
-
-              <section className="event-details-card">
-                <h2>Participants List</h2>
-
-                <div className="event-participants-list">
-                  <div className="event-participants-header">
-                    <span>Name</span>
-                    <span>Email</span>
+                <section className="event-details-card">
+                  <div className="event-details-card-header">
+                    <h2>Event Details</h2>
+                    <button
+                      type="button"
+                      className="event-add-button"
+                      onClick={handleEditButtonClick}
+                    >
+                      <PencilSimpleIcon size={16} />
+                      <span>Edit event</span>
+                    </button>
                   </div>
 
-                  <div className="event-participants-rows">
-                    {selectedUpcomingEvent.participants.map((participant) => (
-                      <div
-                        key={participant.id}
-                        className="event-participants-row"
-                      >
-                        <span>{participant.name}</span>
-                        <span>{participant.email}</span>
+                  <div className="event-details-info-list">
+                    {selectedEventInfoRows.map((row) => (
+                      <div key={row.label} className="event-details-info-row">
+                        <span className="event-details-label">{row.label}</span>
+                        <span className="event-details-value">{row.value}</span>
                       </div>
                     ))}
                   </div>
-                </div>
-              </section>
-            </section>
-          ) : (
-            <>
-              <div className="communications-header">
-                <div className="page-heading">
-                  <h1>Events Management</h1>
-                  <p>
-                    Manage safety events, training sessions and participants
-                    list
-                  </p>
-                </div>
 
-                <button
-                  type="button"
-                  className="event-add-button"
-                  onClick={handleCreateButtonClick}
-                >
-                  <PlusCircleIcon size={20} />
-                  <span>Add new event</span>
-                </button>
-              </div>
+                  <div className="event-details-cover">
+                    <h3>Cover image</h3>
+                    <img
+                      src={selectedUpcomingEvent.coverImage}
+                      alt={`${selectedUpcomingEvent.title} cover`}
+                    />
+                  </div>
+                </section>
 
-              <div className="event-stats">
-                {statsCards.map((card) => (
-                  <section key={card.id} className="event-stat-card">
-                    <h2>{card.value}</h2>
-                    <p>{card.label}</p>
-                  </section>
-                ))}
-              </div>
+                <section className="event-details-card">
+                  <h2>Participants List</h2>
 
-              <section className="event-section-card">
-                <h2 className="event-section-title">Upcoming Events</h2>
+                  <div className="event-participants-list">
+                    <div className="event-participants-header">
+                      <span>Name</span>
+                      <span>Email</span>
+                    </div>
 
-                <div className="event-list">
-                  {upcomingEvents.map((event) => (
-                    <div key={event.id} className="event-item">
-                      <div className="event-item-left">
-                        <h3>{event.title}</h3>
-
-                        <div className="event-meta-row">
-                          <span>{event.schedule}</span>
-                          <span>{event.location}</span>
-                          {event.capacity ? (
-                            <span>{event.capacity}</span>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <div className="event-item-right">
-                        {event.registeredLabel ? (
-                          <span className="event-registered-text">
-                            {event.registeredLabel}
-                          </span>
-                        ) : null}
-
-                        <button
-                          type="button"
-                          className="event-link-button"
-                          onClick={() => setSelectedUpcomingEventId(event.id)}
+                    <div className="event-participants-rows">
+                      {selectedUpcomingEvent.participants.map((participant) => (
+                        <div
+                          key={participant.id}
+                          className="event-participants-row"
                         >
-                          View Details
-                        </button>
-                      </div>
+                          <span>{participant.name}</span>
+                          <span>{participant.email}</span>
+                        </div>
+                      ))}
                     </div>
+                  </div>
+                </section>
+              </section>
+            ) : (
+              <>
+                <div className="communications-header">
+                  <div className="page-heading">
+                    <h1>Events Management</h1>
+                    <p>
+                      Manage safety events, training sessions and participants
+                      list
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="event-add-button"
+                    onClick={handleCreateButtonClick}
+                  >
+                    <PlusCircleIcon size={20} />
+                    <span>Add new event</span>
+                  </button>
+                </div>
+
+                <div className="event-stats">
+                  {statsCards.map((card) => (
+                    <section key={card.id} className="event-stat-card">
+                      <h2>{card.value}</h2>
+                      <p>{card.label}</p>
+                    </section>
                   ))}
                 </div>
-              </section>
 
-              <section className="event-section-card">
-                <h2 className="event-section-title">Events history</h2>
+                <section className="event-section-card">
+                  <h2 className="event-section-title">Upcoming Events</h2>
 
-                <div className="event-list">
-                  {baseEventsData.historyEvents.map((event) => (
-                    <div key={event.id} className="event-item">
-                      <div className="event-item-left">
-                        <h3>{event.title}</h3>
+                  <div className="event-list">
+                    {upcomingEvents.map((event) => (
+                      <div key={event.id} className="event-item">
+                        <div className="event-item-left">
+                          <h3>{event.title}</h3>
 
-                        <div className="event-meta-row">
-                          <span>{event.schedule}</span>
-                          <span>{event.participantsLabel}</span>
+                          <div className="event-meta-row">
+                            <span>{event.schedule}</span>
+                            <span>{event.location}</span>
+                            {event.capacity ? (
+                              <span>{event.capacity}</span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="event-item-right">
+                          {event.registeredLabel ? (
+                            <span className="event-registered-text">
+                              {event.registeredLabel}
+                            </span>
+                          ) : null}
+
+                          <button
+                            type="button"
+                            className="event-link-button"
+                            onClick={() => setSelectedUpcomingEventId(event.id)}
+                          >
+                            View Details
+                          </button>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </section>
 
-                      <div className="event-item-right">
-                        <span className="event-status-badge">
-                          {event.status}
-                        </span>
+                <section className="event-section-card">
+                  <h2 className="event-section-title">Events history</h2>
+
+                  <div className="event-list">
+                    {baseEventsData.historyEvents.map((event) => (
+                      <div key={event.id} className="event-item">
+                        <div className="event-item-left">
+                          <h3>{event.title}</h3>
+
+                          <div className="event-meta-row">
+                            <span>{event.schedule}</span>
+                            <span>{event.participantsLabel}</span>
+                          </div>
+                        </div>
+
+                        <div className="event-item-right">
+                          <span className="event-status-badge">
+                            {event.status}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </>
-          )}
-        </div>
-      </main>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
 
       {showCreateEvent && (
         <CreateEventForm

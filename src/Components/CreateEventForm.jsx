@@ -87,7 +87,7 @@ function CreateEventForm({
   const [formData, setFormData] = useState(() => buildFormData(initialData));
 
   const [errors, setErrors] = useState({});
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmStep, setConfirmStep] = useState("none");
 
   function handleChange(event) {
     const { name, value, type, checked, files } = event.target;
@@ -144,7 +144,7 @@ function CreateEventForm({
 
     if (!validateForm()) return;
 
-    setShowConfirm(true);
+    setConfirmStep(mode === "edit" ? "edit-confirm" : "create-confirm");
   }
 
   function handleConfirmSubmit() {
@@ -168,8 +168,10 @@ function CreateEventForm({
       url: formData.url,
     };
 
+    let submitResult = null;
+
     if (onSubmitEvent) {
-      onSubmitEvent({
+      submitResult = onSubmitEvent({
         mode,
         event: updatedEvent,
       });
@@ -181,7 +183,17 @@ function CreateEventForm({
       );
     }
 
-    setShowConfirm(false);
+    if (mode === "edit") {
+      setConfirmStep("edit-success");
+      return;
+    }
+
+    setConfirmStep("create-success");
+    return submitResult;
+  }
+
+  function handleCloseSuccess() {
+    setConfirmStep("none");
     onClose();
   }
 
@@ -470,76 +482,48 @@ function CreateEventForm({
         </div>
       </div>
 
-      {showConfirm &&
-        (mode === "edit" ? (
+      {confirmStep === "edit-confirm" && (
+        <div
+          className="event-edit-confirm-overlay"
+          onClick={() => setConfirmStep("none")}
+        >
           <div
-            className="event-edit-confirm-overlay"
-            onClick={() => setShowConfirm(false)}
+            className="event-edit-confirm-modal"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="event-edit-confirm-modal"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="event-edit-confirm-content">
-                <div className="event-edit-confirm-icon">
-                  <WarningCircleIcon size={44} weight="fill" />
-                </div>
+            <div className="event-edit-confirm-content">
+              <div className="event-edit-confirm-icon">
+                <WarningCircleIcon size={44} weight="fill" />
+              </div>
 
-                <div className="event-edit-confirm-copy">
-                  <h2>Confirm edition</h2>
-                  <p>Are you sure you want to edit this event?</p>
-                </div>
+              <div className="event-edit-confirm-copy">
+                <h2>Confirm edition</h2>
+                <p>Are you sure you want to edit this event?</p>
+              </div>
 
-                <div className="event-edit-fields-card">
-                  <h3>Edited fields</h3>
-                  <h4>Title</h4>
+              <div className="event-edit-fields-card">
+                <h3>Edited fields</h3>
+                <h4>Title</h4>
 
-                  <div className="event-edit-fields-grid">
-                    <div>
-                      <span>Previous</span>
-                      <p>{initialData?.title || "-"}</p>
-                    </div>
-                    <div>
-                      <span>New</span>
-                      <p>{formData.title || "-"}</p>
-                    </div>
+                <div className="event-edit-fields-grid">
+                  <div>
+                    <span className="event-edit-fields-label-previous">
+                      Previous
+                    </span>
+                    <p>{initialData?.title || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="event-edit-fields-label-new">New</span>
+                    <p>{formData.title || "-"}</p>
                   </div>
                 </div>
-
-                <div className="event-edit-confirm-actions">
-                  <button
-                    type="button"
-                    className="event-cancel-button"
-                    onClick={() => setShowConfirm(false)}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="button"
-                    className="event-submit-button"
-                    onClick={handleConfirmSubmit}
-                  >
-                    <CheckCircleIcon size={20} />
-                    <span>Confirm edition</span>
-                  </button>
-                </div>
               </div>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="confirm-modal-overlay"
-            onClick={() => setShowConfirm(false)}
-          >
-            <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-              <h3>Are you sure you want to create the event?</h3>
 
-              <div className="confirm-modal-actions">
+              <div className="event-edit-confirm-actions">
                 <button
                   type="button"
                   className="event-cancel-button"
-                  onClick={() => setShowConfirm(false)}
+                  onClick={() => setConfirmStep("none")}
                 >
                   Cancel
                 </button>
@@ -549,12 +533,101 @@ function CreateEventForm({
                   className="event-submit-button"
                   onClick={handleConfirmSubmit}
                 >
-                  Yes, Create
+                  <CheckCircleIcon size={20} />
+                  <span>Confirm edition</span>
                 </button>
               </div>
             </div>
           </div>
-        ))}
+        </div>
+      )}
+
+      {confirmStep === "edit-success" && (
+        <div
+          className="event-edit-confirm-overlay"
+          onClick={handleCloseSuccess}
+        >
+          <div
+            className="event-edit-confirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="event-edit-confirm-content">
+              <div className="event-edit-confirm-icon event-edit-confirm-icon-success">
+                <CheckCircleIcon size={44} weight="fill" />
+              </div>
+
+              <div className="event-edit-confirm-copy">
+                <h2>Success!</h2>
+                <p>Event successfully updated</p>
+              </div>
+
+              <div className="event-edit-confirm-actions event-edit-confirm-actions-single">
+                <button
+                  type="button"
+                  className="event-submit-button"
+                  onClick={handleCloseSuccess}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmStep === "create-confirm" && (
+        <div
+          className="confirm-modal-overlay"
+          onClick={() => setConfirmStep("none")}
+        >
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="event-create-confirm-icon">
+              <WarningCircleIcon size={36} weight="fill" />
+            </div>
+            <h3>Are you sure you want to create the event?</h3>
+
+            <div className="confirm-modal-actions">
+              <button
+                type="button"
+                className="event-cancel-button"
+                onClick={() => setConfirmStep("none")}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="event-submit-button"
+                onClick={handleConfirmSubmit}
+              >
+                Yes, Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmStep === "create-success" && (
+        <div className="confirm-modal-overlay" onClick={handleCloseSuccess}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="event-create-confirm-icon event-create-confirm-icon-success">
+              <CheckCircleIcon size={36} weight="fill" />
+            </div>
+
+            <h3>Event created successfully</h3>
+
+            <div className="confirm-modal-actions confirm-modal-actions-single">
+              <button
+                type="button"
+                className="event-submit-button"
+                onClick={handleCloseSuccess}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

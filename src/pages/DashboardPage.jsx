@@ -73,111 +73,62 @@ function DashboardPage({
 
   return (
     <div className="admin-layout">
-      <Sidebar activePage={activePage} onNavigate={onNavigate} />
+      <AdminHeader />
 
-      <main className="admin-content">
-        <AdminHeader />
+      <div className="admin-body">
+        <Sidebar activePage={activePage} onNavigate={onNavigate} />
 
-        <div className="standard-page-content">
-          <div className="page-heading">
-            <h1>Dashboard Overview</h1>
-            <p>Welcome to the Algonquin GO admin portal.</p>
-          </div>
-
-          <div className="dashboard-top-stats">
-            <section className="dashboard-stat-card">
-              <BellIcon size={34} />
-              <h3>Recent Notifications</h3>
-              <div className="dashboard-stat-value-row">
-                <h2>230</h2>
-                <span className="trend-positive">↗ +12%</span>
-              </div>
-            </section>
-
-            <section className="dashboard-stat-card">
-              <FileTextIcon size={34} />
-              <h3>User Reports</h3>
-              <div className="dashboard-stat-value-row">
-                <h2>120</h2>
-                <span className="trend-positive">↗ +8%</span>
-              </div>
-            </section>
-
-            <section className="dashboard-stat-card">
-              <WarningCircleIcon size={34} />
-              <h3>Recent Alerts</h3>
-              <div className="dashboard-stat-value-row">
-                <h2>45</h2>
-                <span className="trend-negative">↘ -15%</span>
-              </div>
-            </section>
-
-            <section className="dashboard-stat-card">
-              <SirenIcon size={34} />
-              <h3>Emergencies</h3>
-              <div className="dashboard-stat-value-row">
-                <h2>4</h2>
-                <span className="trend-negative">↘ -9%</span>
-              </div>
-            </section>
-          </div>
-
-          <section className="dashboard-chart-card">
-            <h2>Activity Overview (Last 30 Days)</h2>
-            <div className="dashboard-chart-placeholder">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={activityOverviewData}
-                  margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
-                >
-                  <CartesianGrid stroke="#d7d7d7" strokeDasharray="4 4" />
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fill: "#7d7d7d", fontSize: 12 }}
-                    axisLine={{ stroke: "#7d7d7d" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "#7d7d7d", fontSize: 12 }}
-                    axisLine={{ stroke: "#7d7d7d" }}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    cursor={{ stroke: "#c6c9cc", strokeWidth: 1 }}
-                    contentStyle={{
-                      borderRadius: 12,
-                      borderColor: "#c6c9cc",
-                      fontSize: 12,
-                      fontWeight: 500,
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#c98500"
-                    strokeWidth={3}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+        <main className="admin-content">
+          <div className="standard-page-content">
+            <div className="page-heading">
+              <h1>Dashboard Overview</h1>
+              <p>Welcome to the Algonquin GO admin portal.</p>
             </div>
-          </section>
 
-          <div className="dashboard-bottom-grid">
-            <section className="dashboard-card">
-              <div className="dashboard-card-header">
-                <div>
-                  <h2>Active Users</h2>
-                  <h3>2,845</h3>
-                  <p>+12 this week</p>
+            <div className="dashboard-top-stats">
+              <section className="dashboard-stat-card">
+                <BellIcon size={34} />
+                <h3>Recent Notifications</h3>
+                <div className="dashboard-stat-value-row">
+                  <h2>230</h2>
+                  <span className="trend-positive">↗ +12%</span>
                 </div>
-                <UserIcon size={44} />
-              </div>
+              </section>
 
-              <div className="dashboard-chart-placeholder small">
+              <section className="dashboard-stat-card">
+                <FileTextIcon size={34} />
+                <h3>User Reports</h3>
+                <div className="dashboard-stat-value-row">
+                  <h2>120</h2>
+                  <span className="trend-positive">↗ +8%</span>
+                </div>
+              </section>
+
+              <section className="dashboard-stat-card">
+                <WarningCircleIcon size={34} />
+                <h3>Recent Alerts</h3>
+                <div className="dashboard-stat-value-row">
+                  <h2>45</h2>
+                  <span className="trend-negative">↘ -15%</span>
+                </div>
+              </section>
+
+              <section className="dashboard-stat-card">
+                <SirenIcon size={34} />
+                <h3>Emergencies</h3>
+                <div className="dashboard-stat-value-row">
+                  <h2>4</h2>
+                  <span className="trend-negative">↘ -9%</span>
+                </div>
+              </section>
+            </div>
+
+            <section className="dashboard-chart-card">
+              <h2>Activity Overview (Last 30 Days)</h2>
+              <div className="dashboard-chart-placeholder">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={activeUsersTrendData}
+                    data={activityOverviewData}
                     margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
                   >
                     <CartesianGrid stroke="#d7d7d7" strokeDasharray="4 4" />
@@ -204,40 +155,91 @@ function DashboardPage({
                     <Line
                       type="monotone"
                       dataKey="value"
-                      stroke="#1b56b3"
+                      stroke="#c98500"
                       strokeWidth={3}
-                      dot={{ r: 4.5, fill: "#1b56b3", stroke: "#1b56b3" }}
-                      activeDot={{ r: 6 }}
+                      dot={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </section>
 
-            <section className="dashboard-card">
-              <h2>System Status</h2>
-
-              <div className="system-status-list">
-                {statusItems.map((item) => (
-                  <div key={item.label} className="system-status-item">
-                    <div className="status-row">
-                      <span>{item.label}</span>
-                      <span>{item.value}</span>
-                    </div>
-
-                    <div className="status-track">
-                      <div
-                        className={`status-fill ${item.className}`}
-                        style={{ width: item.width }}
-                      />
-                    </div>
+            <div className="dashboard-bottom-grid">
+              <section className="dashboard-card">
+                <div className="dashboard-card-header">
+                  <div>
+                    <h2>Active Users</h2>
+                    <h3>2,845</h3>
+                    <p>+12 this week</p>
                   </div>
-                ))}
-              </div>
-            </section>
+                  <UserIcon size={44} />
+                </div>
+
+                <div className="dashboard-chart-placeholder small">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={activeUsersTrendData}
+                      margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
+                    >
+                      <CartesianGrid stroke="#d7d7d7" strokeDasharray="4 4" />
+                      <XAxis
+                        dataKey="day"
+                        tick={{ fill: "#7d7d7d", fontSize: 12 }}
+                        axisLine={{ stroke: "#7d7d7d" }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fill: "#7d7d7d", fontSize: 12 }}
+                        axisLine={{ stroke: "#7d7d7d" }}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        cursor={{ stroke: "#c6c9cc", strokeWidth: 1 }}
+                        contentStyle={{
+                          borderRadius: 12,
+                          borderColor: "#c6c9cc",
+                          fontSize: 12,
+                          fontWeight: 500,
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#1b56b3"
+                        strokeWidth={3}
+                        dot={{ r: 4.5, fill: "#1b56b3", stroke: "#1b56b3" }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+
+              <section className="dashboard-card">
+                <h2>System Status</h2>
+
+                <div className="system-status-list">
+                  {statusItems.map((item) => (
+                    <div key={item.label} className="system-status-item">
+                      <div className="status-row">
+                        <span>{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+
+                      <div className="status-track">
+                        <div
+                          className={`status-fill ${item.className}`}
+                          style={{ width: item.width }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

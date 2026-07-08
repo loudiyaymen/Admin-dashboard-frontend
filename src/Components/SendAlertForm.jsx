@@ -16,6 +16,51 @@ function SendAlertForm({ onClose }) {
 
   const [modalStep, setModalStep] = useState("form");
 
+  const alertTypeConfig = {
+    "Campus Weather Alert": {
+      requiresBuilding: false,
+      buildMessage: () =>
+        "Campus weather alert in effect. Please monitor official channels and use caution while moving between buildings.",
+    },
+    "Security Update": {
+      requiresBuilding: false,
+      buildMessage: () =>
+        "Campus security update issued. Please review the latest guidance and follow posted instructions.",
+    },
+    "Emergency Alert": {
+      requiresBuilding: true,
+      buildMessage: (building) =>
+        `Emergency alert for ${building}. Follow safety instructions immediately.`,
+    },
+    "Event Reminder": {
+      requiresBuilding: true,
+      buildMessage: (building) =>
+        `Event reminder for ${building}. Check the latest schedule and arrival instructions.`,
+    },
+    "Fire Alarm": {
+      requiresBuilding: true,
+      buildMessage: (building) =>
+        `Fire alarm triggered in ${building}. Evacuate immediately using the nearest safe exit.`,
+    },
+    Evacuation: {
+      requiresBuilding: true,
+      buildMessage: (building) =>
+        `Evacuation notice for ${building}. Leave the area immediately and proceed to the designated assembly point.`,
+    },
+    Flooding: {
+      requiresBuilding: true,
+      buildMessage: (building) =>
+        `Flooding alert for ${building}. Avoid affected areas and follow staff direction for safe routing.`,
+    },
+    "Power Outage": {
+      requiresBuilding: true,
+      buildMessage: (building) =>
+        `Power outage reported in ${building}. Stay calm and follow emergency lighting and campus staff instructions.`,
+    },
+  };
+
+  const alertTypeOptions = Object.keys(alertTypeConfig);
+
   const buildingOptions = [
     "All Buildings",
     "Building A",
@@ -26,26 +71,22 @@ function SendAlertForm({ onClose }) {
   ];
 
   function getAutoMessage(alertTitle, building) {
-    const selectedBuilding = building || "the selected location";
+    const selectedAlert = alertTypeConfig[alertTitle];
 
-    if (alertTitle === "Campus Weather Alert") {
-      return `Weather alert for ${selectedBuilding}. Please use caution and follow campus safety updates.`;
+    if (!selectedAlert) {
+      return "";
     }
 
-    if (alertTitle === "Security Update") {
-      return `Security update for ${selectedBuilding}. Please stay alert and follow official campus guidance.`;
+    if (selectedAlert.requiresBuilding) {
+      const selectedBuilding = building || "the selected location";
+      return selectedAlert.buildMessage(selectedBuilding);
     }
 
-    if (alertTitle === "Emergency Alert") {
-      return `Emergency alert for ${selectedBuilding}. Please follow safety instructions immediately.`;
-    }
-
-    if (alertTitle === "Event Reminder") {
-      return `Event reminder for ${selectedBuilding}. Please check the latest schedule and event details.`;
-    }
-
-    return "";
+    return selectedAlert.buildMessage();
   }
+
+  const selectedAlertConfig = alertTypeConfig[formData.alertTitle] || null;
+  const requiresBuilding = selectedAlertConfig?.requiresBuilding || false;
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -57,10 +98,14 @@ function SendAlertForm({ onClose }) {
       };
 
       if (name === "alertTitle") {
+        const nextAlertConfig = alertTypeConfig[value];
+        if (!nextAlertConfig?.requiresBuilding) {
+          updatedData.building = "All Buildings";
+        }
         updatedData.message = getAutoMessage(value, updatedData.building);
       }
 
-      if (name === "building" && updatedData.alertTitle) {
+      if (name === "building" && updatedData.alertTitle && requiresBuilding) {
         updatedData.message = getAutoMessage(updatedData.alertTitle, value);
       }
 
@@ -75,7 +120,7 @@ function SendAlertForm({ onClose }) {
 
   const isFormValid =
     formData.alertTitle.trim() !== "" &&
-    formData.building.trim() !== "" &&
+    (!requiresBuilding || formData.building.trim() !== "") &&
     formData.message.trim() !== "";
 
   function handleCancelClick() {
@@ -128,34 +173,9 @@ function SendAlertForm({ onClose }) {
                     required
                   >
                     <option value="">Select an option</option>
-                    <option value="Campus Weather Alert">
-                      Campus Weather Alert
-                    </option>
-                    <option value="Security Update">Security Update</option>
-                    <option value="Emergency Alert">Emergency Alert</option>
-                    <option value="Event Reminder">Event Reminder</option>
-                  </select>
-
-                  <CaretDownIcon size={20} className="select-icon" />
-                </div>
-              </label>
-
-              <label className="alert-field">
-                <span>
-                  Building <span className="required-mark">*</span>
-                </span>
-
-                <div className="select-wrapper">
-                  <select
-                    name="building"
-                    value={formData.building}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select a building</option>
-                    {buildingOptions.map((building) => (
-                      <option key={building} value={building}>
-                        {building}
+                    {alertTypeOptions.map((alertType) => (
+                      <option key={alertType} value={alertType}>
+                        {alertType}
                       </option>
                     ))}
                   </select>
@@ -163,6 +183,32 @@ function SendAlertForm({ onClose }) {
                   <CaretDownIcon size={20} className="select-icon" />
                 </div>
               </label>
+
+              {requiresBuilding && (
+                <label className="alert-field">
+                  <span>
+                    Building <span className="required-mark">*</span>
+                  </span>
+
+                  <div className="select-wrapper">
+                    <select
+                      name="building"
+                      value={formData.building}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select a building</option>
+                      {buildingOptions.map((building) => (
+                        <option key={building} value={building}>
+                          {building}
+                        </option>
+                      ))}
+                    </select>
+
+                    <CaretDownIcon size={20} className="select-icon" />
+                  </div>
+                </label>
+              )}
 
               <label className="alert-field">
                 <span>
