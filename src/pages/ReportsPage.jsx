@@ -12,7 +12,6 @@ function ReportsPage({ activePage, onNavigate }) {
   const [selectedReportId, setSelectedReportId] = useState(null);
 
   function handleSearchChange(value) {
-    // TODO: Wire search text to API-backed filtering once reports endpoints are integrated.
     setSearchText(value);
   }
 

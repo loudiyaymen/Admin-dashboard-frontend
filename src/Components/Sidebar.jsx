@@ -66,16 +66,6 @@ function Sidebar({ activePage, onNavigate }) {
           <CalendarIcon size={20} />
           <span>Events</span>
         </button>
-
-        {/* <button type="button" className="sidebar-link sidebar-link-secondary">
-          <DeviceMobileIcon size={20} />
-          <span>App Management</span>
-        </button> */}
-
-        {/* <button type="button" className="sidebar-link sidebar-link-secondary">
-          <GearIcon size={20} />
-          <span>Settings</span>
-        </button> */}
       </nav>
     </aside>
   );
