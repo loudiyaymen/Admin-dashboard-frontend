@@ -60,7 +60,7 @@
 
 .logout-button {
   padding: var(--space-sm) var(--space-md);
-  background: #004632;
+  background: var(--color-secondary);
   color: white;
 }
 
