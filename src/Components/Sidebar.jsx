@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarIcon,
   ChatCircleIcon,
@@ -9,14 +10,40 @@ import {
   DeviceMobileIcon,
 } from "@phosphor-icons/react";
 
-function Sidebar({ activePage, onNavigate }) {
+const pagePathMap = {
+  "/dashboard": "dashboard",
+  "/communications": "communications",
+  "/reports": "reports",
+  "/emergency": "emergency",
+  "/navigation": "navigation",
+  "/events": "events",
+};
+
+function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const currentPage = pagePathMap[location.pathname] || "dashboard";
+
+  const handleNavigate = (page) => {
+    const pathMap = {
+      dashboard: "/dashboard",
+      communications: "/communications",
+      reports: "/reports",
+      emergency: "/emergency",
+      navigation: "/navigation",
+      events: "/events",
+    };
+    navigate(pathMap[page] || "/dashboard");
+  };
+
   return (
     <aside className="sidebar">
       <nav className="sidebar-nav">
         <button
           type="button"
-          className={`sidebar-link ${activePage === "dashboard" ? "sidebar-link-active" : ""}`}
-          onClick={() => onNavigate("dashboard")}
+          className={`sidebar-link ${currentPage === "dashboard" ? "sidebar-link-active" : ""}`}
+          onClick={() => handleNavigate("dashboard")}
         >
           <SquaresFourIcon size={20} />
           <span>Dashboard</span>
@@ -24,8 +51,8 @@ function Sidebar({ activePage, onNavigate }) {
 
         <button
           type="button"
-          className={`sidebar-link ${activePage === "communications" ? "sidebar-link-active" : ""}`}
-          onClick={() => onNavigate("communications")}
+          className={`sidebar-link ${currentPage === "communications" ? "sidebar-link-active" : ""}`}
+          onClick={() => handleNavigate("communications")}
         >
           <ChatCircleIcon size={20} />
           <span>Communications</span>
@@ -33,8 +60,8 @@ function Sidebar({ activePage, onNavigate }) {
 
         <button
           type="button"
-          className={`sidebar-link ${activePage === "reports" ? "sidebar-link-active" : ""}`}
-          onClick={() => onNavigate("reports")}
+          className={`sidebar-link ${currentPage === "reports" ? "sidebar-link-active" : ""}`}
+          onClick={() => handleNavigate("reports")}
         >
           <FileTextIcon size={20} />
           <span>Reports</span>
@@ -42,8 +69,8 @@ function Sidebar({ activePage, onNavigate }) {
 
         <button
           type="button"
-          className={`sidebar-link ${activePage === "emergency" ? "sidebar-link-active" : ""}`}
-          onClick={() => onNavigate("emergency")}
+          className={`sidebar-link ${currentPage === "emergency" ? "sidebar-link-active" : ""}`}
+          onClick={() => handleNavigate("emergency")}
         >
           <SirenIcon size={20} />
           <span>Emergency</span>
@@ -51,8 +78,8 @@ function Sidebar({ activePage, onNavigate }) {
 
         <button
           type="button"
-          className={`sidebar-link ${activePage === "navigation" ? "sidebar-link-active" : ""}`}
-          onClick={() => onNavigate("navigation")}
+          className={`sidebar-link ${currentPage === "navigation" ? "sidebar-link-active" : ""}`}
+          onClick={() => handleNavigate("navigation")}
         >
           <MapPinIcon size={20} />
           <span>Navigation</span>
@@ -60,8 +87,8 @@ function Sidebar({ activePage, onNavigate }) {
 
         <button
           type="button"
-          className={`sidebar-link ${activePage === "events" ? "sidebar-link-active" : ""}`}
-          onClick={() => onNavigate("events")}
+          className={`sidebar-link ${currentPage === "events" ? "sidebar-link-active" : ""}`}
+          onClick={() => handleNavigate("events")}
         >
           <CalendarIcon size={20} />
           <span>Events</span>
