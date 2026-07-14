@@ -8,6 +8,7 @@ import {
 function ReportDetailsModal({ report, onBack, onMarkResolved }) {
   const [showResolveConfirm, setShowResolveConfirm] = useState(false);
   const [showResolveSuccess, setShowResolveSuccess] = useState(false);
+  const [resolveError, setResolveError] = useState("");
 
   if (!report) {
     return null;
@@ -39,10 +40,16 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
     setShowResolveConfirm(true);
   }
 
-  function handleConfirmResolve() {
-    onMarkResolved(report.reportId);
-    setShowResolveConfirm(false);
-    setShowResolveSuccess(true);
+  async function handleConfirmResolve() {
+    try {
+      setResolveError("");
+      await onMarkResolved(report.reportId);
+      setShowResolveConfirm(false);
+      setShowResolveSuccess(true);
+    } catch (error) {
+      setResolveError(error.message || "Failed to resolve report");
+      setShowResolveConfirm(false);
+    }
   }
 
   return (
@@ -102,18 +109,26 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           <div className="report-detail-field">
             <h3>Attachments</h3>
             <div className="report-attachment-list">
-              {report.attachments.map((attachment) => (
-                <img
-                  key={attachment.id}
-                  src={attachment.src}
-                  alt={attachment.alt}
-                  className="report-attachment-image"
-                />
-              ))}
+              {report.attachments.length === 0 ? (
+                <p>No attachments</p>
+              ) : (
+                report.attachments.map((attachment) => (
+                  <img
+                    key={attachment.id}
+                    src={attachment.src}
+                    alt={attachment.alt}
+                    className="report-attachment-image"
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>
       </section>
+
+      {resolveError ? (
+        <p className="app-message-error">{resolveError}</p>
+      ) : null}
 
       {showResolveConfirm && (
         <div

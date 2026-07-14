@@ -1,20 +1,54 @@
+import { useEffect, useState } from "react";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
+import { fetchSosEvents } from "../services/sosService";
+import { API_BASE_URL } from "../services/apiClient";
 
-function EmergencyPage({ activePage, onNavigate }) {
-  const reports = [
-    "EMR-2026-012",
-    "EMR-2026-011",
-    "EMR-2026-010",
-    "EMR-2026-09",
-  ];
+const WS_URL =
+  import.meta.env.VITE_WS_URL ||
+  API_BASE_URL.replace("http://", "ws://")
+    .replace("/api/v1", "")
+    .replace(":4000", ":4001");
+
+function EmergencyPage({ headerProps }) {
+  const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function loadSosEvents() {
+    setErrorMessage("");
+    try {
+      const rows = await fetchSosEvents();
+      setReports(rows);
+    } catch (error) {
+      setErrorMessage(error.message || "Failed to load SOS events");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSosEvents();
+
+    const socket = new WebSocket(WS_URL);
+    socket.onmessage = (event) => {
+      const message = String(event.data || "");
+      if (message === "SOS_ACTIVE" || message === "PUSH_SOS_ACTIVE") {
+        loadSosEvents();
+      }
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   return (
     <div className="admin-layout">
-      <AdminHeader />
+      <AdminHeader {...headerProps} />
 
       <div className="admin-body">
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar />
 
         <main className="admin-content">
           <div className="standard-page-content">
@@ -32,10 +66,15 @@ function EmergencyPage({ activePage, onNavigate }) {
                   <span>Time</span>
                 </div>
 
-                {reports.map((reportId) => (
-                  <div key={reportId} className="emergency-log-row">
-                    <span>{reportId}</span>
-                    <span>2026-02-02 11:45</span>
+                {isLoading ? <p>Loading SOS events...</p> : null}
+                {errorMessage ? (
+                  <p className="app-message-error">{errorMessage}</p>
+                ) : null}
+
+                {reports.map((report) => (
+                  <div key={report.id} className="emergency-log-row">
+                    <span>{report.id}</span>
+                    <span>{report.time}</span>
                   </div>
                 ))}
               </div>

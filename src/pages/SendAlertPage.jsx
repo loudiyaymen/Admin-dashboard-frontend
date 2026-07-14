@@ -1,56 +1,57 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PlusCircleIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
 import SendAlertForm from "../Components/SendAlertForm";
+import { fetchAlerts } from "../services/alertsservice";
+import { fetchAlertMetrics } from "../services/analyticsService";
 
-const notifications = [
-  {
-    id: 1,
-    title: "Campus Weather Alert",
-    description: "Severe winter storm warning in effect",
-    sentAt: "2026-02-02 08:00",
-    recipients: 2845,
-    type: "Push Notification",
-  },
-  {
-    id: 2,
-    title: "Security Update",
-    description: "New security measures implemented",
-    sentAt: "2026-01-24 15:00",
-    recipients: 2234,
-    type: "Push Notification",
-  },
-  {
-    id: 3,
-    title: "Emergency: Building Evacuation",
-    description: "Please evacuate building C immediately",
-    sentAt: "2026-01-14 12:00",
-    recipients: 2844,
-    type: "Push Notification",
-  },
-  {
-    id: 4,
-    title: "Event Reminder",
-    description: "Fire safety drill tomorrow at 10am",
-    sentAt: "2026-01-02 10:30",
-    recipients: 2234,
-    type: "Push Notification",
-  },
-  {
-    id: 5,
-    title: "Campus Safety Reminder",
-    description: "Please review after-hours safety procedures",
-    sentAt: "2025-12-18 09:15",
-    recipients: 2140,
-    type: "Push Notification",
-  },
-];
+const MOCK_ALERT_METRICS = {
+  totalSent: 67,
+  openRate: 76,
+  criticalAlerts: 3,
+  trend: 8,
+};
 
-function SendAlertPage({ activePage, onNavigate }) {
+function SendAlertPage({ headerProps }) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [notifications, setNotifications] = useState([]);
+  const [alertMetrics, setAlertMetrics] = useState(MOCK_ALERT_METRICS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function loadAlerts() {
+    setErrorMessage("");
+    try {
+      const [alertsData, metricsData] = await Promise.all([
+        fetchAlerts(),
+        fetchAlertMetrics().catch(() => null),
+      ]);
+
+      setNotifications(alertsData);
+
+      if (metricsData?.data) {
+        setAlertMetrics({
+          totalSent: metricsData.data.totalSent || MOCK_ALERT_METRICS.totalSent,
+          openRate: metricsData.data.openRate || MOCK_ALERT_METRICS.openRate,
+          criticalAlerts:
+            metricsData.data.criticalAlerts ||
+            MOCK_ALERT_METRICS.criticalAlerts,
+          trend: metricsData.data.trend || MOCK_ALERT_METRICS.trend,
+        });
+      }
+    } catch (error) {
+      setErrorMessage(error.message || "Failed to load alerts");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAlerts();
+  }, []);
 
   const filteredNotifications = useMemo(() => {
     const text = searchText.toLowerCase();
@@ -61,7 +62,7 @@ function SendAlertPage({ activePage, onNavigate }) {
         item.description.toLowerCase().includes(text)
       );
     });
-  }, [searchText]);
+  }, [searchText, notifications]);
 
   const itemsPerPage = 2;
   const totalPages =
@@ -79,10 +80,10 @@ function SendAlertPage({ activePage, onNavigate }) {
 
   return (
     <div className="admin-layout">
-      <AdminHeader />
+      <AdminHeader {...headerProps} />
 
       <div className="admin-body">
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar />
 
         <main className="admin-content">
           <div className="standard-page-content">
@@ -105,19 +106,22 @@ function SendAlertPage({ activePage, onNavigate }) {
             <div className="communication-stats">
               <section className="analytics-card">
                 <h3>Total Sent</h3>
-                <h2>67</h2>
-                <p>+8 this week</p>
+                <h2>{alertMetrics.totalSent}</h2>
+                <p>
+                  {alertMetrics.trend >= 0 ? "+" : ""}
+                  {alertMetrics.trend} this week
+                </p>
               </section>
 
               <section className="analytics-card">
                 <h3>Open Rate</h3>
-                <h2>76%</h2>
+                <h2>{alertMetrics.openRate}%</h2>
                 <p>Average</p>
               </section>
 
               <section className="analytics-card">
                 <h3>Critical Alerts</h3>
-                <h2>3</h2>
+                <h2>{alertMetrics.criticalAlerts}</h2>
                 <p>Last 30 days</p>
               </section>
             </div>
@@ -138,6 +142,10 @@ function SendAlertPage({ activePage, onNavigate }) {
               </div>
 
               <div className="notification-history-list">
+                {isLoading ? <p>Loading notifications...</p> : null}
+                {errorMessage ? (
+                  <p className="app-message-error">{errorMessage}</p>
+                ) : null}
                 {visibleNotifications.length === 0 ? (
                   <p>No notifications found.</p>
                 ) : (
@@ -186,7 +194,10 @@ function SendAlertPage({ activePage, onNavigate }) {
       </div>
 
       {showCreateForm && (
-        <SendAlertForm onClose={() => setShowCreateForm(false)} />
+        <SendAlertForm
+          onClose={() => setShowCreateForm(false)}
+          onAlertSent={loadAlerts}
+        />
       )}
     </div>
   );

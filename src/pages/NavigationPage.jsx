@@ -1,5 +1,3 @@
-//Campus map and navigation tools for admins to manage building layouts, emergency routes, and location-based services.
-
 import {
   MapPinIcon,
   StackIcon,
@@ -11,13 +9,13 @@ import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
 import campusMap from "../assets/campus-map.png";
 
-function NavigationPage({ activePage, onNavigate }) {
+function NavigationPage({ headerProps }) {
   return (
     <div className="admin-layout">
-      <AdminHeader />
+      <AdminHeader {...headerProps} />
 
       <div className="admin-body">
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar />
 
         <main className="admin-content">
           <div className="standard-page-content">

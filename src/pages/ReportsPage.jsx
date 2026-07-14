@@ -1,149 +1,74 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
 import ReportInbox from "../Components/ReportInbox";
 import ReportsAnalytics from "../Components/ReportsAnalytics";
 import ReportsSearch from "../Components/ReportsSearch";
 import ReportDetailsModal from "../Components/ReportDetailsModel";
-import brokenLightImage from "../assets/brokenlight.png";
+import { fetchReports, resolveReport } from "../services/reportsservice";
+import {
+  fetchResolutionRates,
+  fetchReportDistribution,
+} from "../services/analyticsService";
 
-function ReportsPage({ activePage, onNavigate }) {
+function ReportsPage({ headerProps }) {
   const [searchText, setSearchText] = useState("");
   const [selectedReportId, setSelectedReportId] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [resolutionRateData, setResolutionRateData] = useState([]);
+  const [distributionDataFromApi, setDistributionDataFromApi] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   function handleSearchChange(value) {
     setSearchText(value);
   }
 
-  const initialReports = [
-    {
-      reportId: "RPT-2026-048",
-      title: "Broken light in parking lot",
-      location: "Parking lot C",
-      category: "Incident",
-      status: "Open",
-      submissionDateTime: "2026-02-02 14:30",
-      reporter: {
-        name: "Anonymous",
-        email: "Anonymous",
-      },
-      details: {
-        incidentDetails: "Broken light in parking lot",
-        location: "Parking lot C",
-        dateOfIncident: "2026-02-02",
-        timeOfIncident: "-",
-      },
-      attachments: [
-        {
-          id: "att-1",
-          src: brokenLightImage,
-          alt: "Broken parking lot light",
-        },
-      ],
-    },
-    {
-      reportId: "RPT-2026-047",
-      title: "Laptop stolen from library",
-      location: "Library 3rd floor",
-      category: "Lost item",
-      status: "Open",
-      submissionDateTime: "2026-01-31 09:25",
-      reporter: {
-        name: "Anonymous",
-        email: "Anonymous",
-      },
-      details: {
-        incidentDetails: "Laptop missing from study table in library.",
-        location: "Library 3rd floor",
-        dateOfIncident: "2026-01-31",
-        timeOfIncident: "09:10",
-      },
-      attachments: [
-        {
-          id: "att-2",
-          src: brokenLightImage,
-          alt: "Report attachment",
-        },
-      ],
-    },
-    {
-      reportId: "RPT-2026-046",
-      title: "Slippery walkway near entrance",
-      location: "Entrance E building",
-      category: "Lost item",
-      status: "Resolved",
-      submissionDateTime: "2026-01-29 10:50",
-      reporter: {
-        name: "Anonymous",
-        email: "Anonymous",
-      },
-      details: {
-        incidentDetails: "Slippery surface near the entrance due to ice.",
-        location: "Entrance E building",
-        dateOfIncident: "2026-01-29",
-        timeOfIncident: "10:35",
-      },
-      attachments: [
-        {
-          id: "att-3",
-          src: brokenLightImage,
-          alt: "Report attachment",
-        },
-      ],
-    },
-    {
-      reportId: "RPT-2026-045",
-      title: "Suspicious activity",
-      location: "Student Commons",
-      category: "Incident",
-      status: "Resolved",
-      submissionDateTime: "2026-01-26 20:12",
-      reporter: {
-        name: "Anonymous",
-        email: "Anonymous",
-      },
-      details: {
-        incidentDetails: "Suspicious person observed near student commons.",
-        location: "Student Commons",
-        dateOfIncident: "2026-01-26",
-        timeOfIncident: "20:00",
-      },
-      attachments: [
-        {
-          id: "att-4",
-          src: brokenLightImage,
-          alt: "Report attachment",
-        },
-      ],
-    },
-    {
-      reportId: "RPT-2026-044",
-      title: "Personal belonging missing",
-      location: "Building B",
-      category: "Lost item",
-      status: "Open",
-      submissionDateTime: "2026-01-21 16:40",
-      reporter: {
-        name: "Anonymous",
-        email: "Anonymous",
-      },
-      details: {
-        incidentDetails: "Bag missing from common area in building B.",
-        location: "Building B",
-        dateOfIncident: "2026-01-21",
-        timeOfIncident: "16:10",
-      },
-      attachments: [
-        {
-          id: "att-5",
-          src: brokenLightImage,
-          alt: "Report attachment",
-        },
-      ],
-    },
-  ];
+  useEffect(() => {
+    let mounted = true;
 
-  const [reports, setReports] = useState(initialReports);
+    const fetchData = async () => {
+      try {
+        const [reportsData, ratesData, distData] = await Promise.all([
+          fetchReports(),
+          fetchResolutionRates(),
+          fetchReportDistribution(),
+        ]);
+
+        if (!mounted) return;
+
+        setReports(reportsData);
+        setResolutionRateData(ratesData?.data || []);
+        setDistributionDataFromApi(distData?.data || []);
+      } catch (error) {
+        if (mounted) {
+          setErrorMessage(error.message || "Failed to load reports");
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filteredReports = useMemo(() => {
+    const term = searchText.trim().toLowerCase();
+    if (!term) return reports;
+
+    return reports.filter((report) => {
+      return (
+        report.title.toLowerCase().includes(term) ||
+        report.reportId.toLowerCase().includes(term)
+      );
+    });
+  }, [reports, searchText]);
 
   const analyticsMeta = {
     totalReportsDelta: "+12 this week",
@@ -153,16 +78,16 @@ function ReportsPage({ activePage, onNavigate }) {
     avgResponseTimeHint: "-1h improvement",
   };
 
-  const openReportsCount = reports.filter(
+  const openReportsCount = filteredReports.filter(
     (report) => report.status.toLowerCase() === "open",
   ).length;
 
-  const resolvedReportsCount = reports.filter(
+  const resolvedReportsCount = filteredReports.filter(
     (report) => report.status.toLowerCase() === "resolved",
   ).length;
 
   const analyticsSummary = {
-    totalReports: reports.length,
+    totalReports: filteredReports.length,
     totalReportsDelta: analyticsMeta.totalReportsDelta,
     openReports: openReportsCount,
     openReportsHint: analyticsMeta.openReportsHint,
@@ -172,31 +97,19 @@ function ReportsPage({ activePage, onNavigate }) {
     avgResponseTimeHint: analyticsMeta.avgResponseTimeHint,
   };
 
-  const distributionCounts = reports.reduce((accumulator, report) => {
-    const key = report.category;
-    accumulator[key] = (accumulator[key] || 0) + 1;
-    return accumulator;
-  }, {});
-
-  const distributionData = Object.entries(distributionCounts).map(
-    ([label, value]) => ({
-      label,
-      value,
-    }),
-  );
-
-  const resolutionRateData = [
-    { month: "Feb", rate: 70 },
-    { month: "Mar", rate: 68 },
-    { month: "Apr", rate: 79 },
-    { month: "May", rate: 83 },
-    { month: "Jun", rate: 76 },
-    { month: "Jul", rate: 88 },
-    { month: "Aug", rate: 86 },
-    { month: "Sep", rate: 90 },
-    { month: "Oct", rate: 89 },
-    { month: "Nov", rate: 93 },
-  ];
+  const distributionData =
+    distributionDataFromApi.length > 0
+      ? distributionDataFromApi
+      : Object.entries(
+          filteredReports.reduce((accumulator, report) => {
+            const key = report.category;
+            accumulator[key] = (accumulator[key] || 0) + 1;
+            return accumulator;
+          }, {}),
+        ).map(([label, value]) => ({
+          label,
+          value,
+        }));
 
   const selectedReport = reports.find(
     (report) => report.reportId === selectedReportId,
@@ -210,25 +123,21 @@ function ReportsPage({ activePage, onNavigate }) {
     setSelectedReportId(null);
   }
 
-  function handleMarkResolved(reportId) {
+  async function handleMarkResolved(reportId) {
+    const updated = await resolveReport(reportId);
     setReports((currentReports) =>
       currentReports.map((report) =>
-        report.reportId === reportId
-          ? {
-              ...report,
-              status: "Resolved",
-            }
-          : report,
+        report.reportId === reportId ? { ...report, ...updated } : report,
       ),
     );
   }
 
   return (
     <div className="admin-layout">
-      <AdminHeader />
+      <AdminHeader {...headerProps} />
 
       <div className="admin-body">
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar />
 
         <main className="admin-content">
           {selectedReport ? (
@@ -250,8 +159,12 @@ function ReportsPage({ activePage, onNavigate }) {
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                   />
+                  {isLoading ? <p>Loading reports...</p> : null}
+                  {errorMessage ? (
+                    <p className="app-message-error">{errorMessage}</p>
+                  ) : null}
                   <ReportInbox
-                    reports={reports}
+                    reports={filteredReports}
                     onSelectReport={handleSelectReport}
                   />
                 </section>

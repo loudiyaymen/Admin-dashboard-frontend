@@ -3,148 +3,108 @@ import {
   PencilSimpleIcon,
   PlusCircleIcon,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminHeader from "../Components/AdminHeader";
 import CreateEventForm from "../Components/CreateEventForm";
 import Sidebar from "../Components/Sidebar";
 import safetyDrillImage from "../assets/safetyDrill.png";
+import {
+  createEvent,
+  fetchCampuses,
+  fetchEvents,
+  updateEvent,
+} from "../services/eventsService";
 
-const baseEventsData = {
-  summary: {
-    totalParticipants: 342,
-    completedThisMonth: 8,
-    avgAttendance: "85%",
-  },
-  upcomingEvents: [
-    {
-      id: 1,
-      title: "Fire Safety Drill",
-      schedule: "2026-02-05 at 10:00",
-      location: "All Buildings",
-      capacity: null,
-      registeredLabel: null,
-      type: "Safety Drill",
-      date: "2026-02-05",
-      time: "10:00",
-      eventFee: "No fee",
-      details:
-        "Campus-wide drill focusing on evacuation routes, assembly points, and floor marshal responsibilities.",
-      coverImage: safetyDrillImage,
-      participants: [
-        { id: "p-1", name: "John Smith", email: "smith@algonquinlive.com" },
-        { id: "p-2", name: "Sarah Johnson", email: "john@algonquinlive.com" },
-        { id: "p-3", name: "Michael Brown", email: "brown@algonquinlive.com" },
-      ],
-    },
-    {
-      id: 2,
-      title: "Security Training Workshop",
-      schedule: "2026-02-05 at 10:00",
-      location: "Jack Doyle Recreation centre",
-      capacity: "15 max",
-      registeredLabel: "12 registered",
-      type: "Training Workshop",
-      date: "2026-02-05",
-      time: "10:00",
-      eventFee: "$15",
-      details:
-        "Hands-on training on incident reporting, lockdown protocol, and emergency communication workflows.",
-      coverImage: safetyDrillImage,
-      participants: [
-        { id: "p-4", name: "Nora Williams", email: "nora@algonquinlive.com" },
-        { id: "p-5", name: "Liam Carter", email: "liam@algonquinlive.com" },
-      ],
-    },
-    {
-      id: 3,
-      title: "Fire Extinguisher Hunt",
-      schedule: "2026-02-06 at 10:00",
-      location: "All Buildings",
-      capacity: "Unlimited",
-      registeredLabel: "3 registered",
-      type: "Scavenger Hunt",
-      date: "2026-02-02",
-      time: "15:00",
-      eventFee: "No fee",
-      details:
-        "Find a fire extinguisher around campus and fill out the form to participate in a raffle!",
-      coverImage: safetyDrillImage,
-      participants: [
-        { id: "p-6", name: "John Smith", email: "smith@algonquinlive.com" },
-        { id: "p-7", name: "Sarah Johnson", email: "john@algonquinlive.com" },
-        { id: "p-8", name: "Michael Brown", email: "brown@algonquinlive.com" },
-      ],
-    },
-    {
-      id: 4,
-      title: "Emergency Response Meeting",
-      schedule: "2026-02-15 at 13:00",
-      location: "Conference Room B",
-      capacity: "20 max",
-      registeredLabel: "10 registered",
-      type: "Planning Meeting",
-      date: "2026-02-15",
-      time: "13:00",
-      eventFee: "No fee",
-      details:
-        "Planning session to review incident command structure and communication escalation matrix.",
-      coverImage: safetyDrillImage,
-      participants: [
-        { id: "p-9", name: "Aiden Young", email: "aiden@algonquinlive.com" },
-        { id: "p-10", name: "Mia Davis", email: "mia@algonquinlive.com" },
-      ],
-    },
-  ],
-  historyEvents: [
-    {
-      id: 101,
-      title: "Winter Safety Workshop",
-      schedule: "2026-01-30",
-      participantsLabel: "42 participants",
-      status: "Completed",
-    },
-    {
-      id: 102,
-      title: "Emergency Evacuation Drill",
-      schedule: "2026-02-05",
-      participantsLabel: "32 participants",
-      status: "Completed",
-    },
-  ],
+const baseSummary = {
+  totalParticipants: 0,
+  completedThisMonth: 0,
+  avgAttendance: "-",
 };
 
-function EventsPage({ activePage, onNavigate }) {
+function EventsPage({ headerProps }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [eventFormMode, setEventFormMode] = useState("create");
   const [selectedUpcomingEventId, setSelectedUpcomingEventId] = useState(null);
-  const [upcomingEvents, setUpcomingEvents] = useState(
-    baseEventsData.upcomingEvents,
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [campusId, setCampusId] = useState(searchParams.get("campusId") || "");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  async function loadEvents() {
+    setErrorMessage("");
+    try {
+      const [events, campuses] = await Promise.all([
+        fetchEvents(),
+        fetchCampuses(),
+      ]);
+      setUpcomingEvents(events);
+      if (campuses.length > 0) {
+        setCampusId(campuses[0].campus_id);
+      }
+    } catch (error) {
+      setErrorMessage(error.message || "Failed to load events");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  useEffect(() => {
+    if (campusId) {
+      setSearchParams({ campusId });
+    } else {
+      setSearchParams({});
+    }
+  }, [campusId, setSearchParams]);
+
+  const historyEvents = useMemo(
+    () =>
+      upcomingEvents
+        .filter((event) => !event.isApproved)
+        .map((event) => ({
+          id: `${event.id}-history`,
+          title: event.title,
+          schedule: event.date,
+          participantsLabel: "-",
+          status: "Pending",
+        })),
+    [upcomingEvents],
+  );
+
+  const approvedEvents = useMemo(
+    () => upcomingEvents.filter((event) => event.isApproved),
+    [upcomingEvents],
   );
 
   const statsCards = [
     {
       id: "s1",
-      value: upcomingEvents.length,
+      value: approvedEvents.length,
       label: "Upcoming Events",
     },
     {
       id: "s2",
-      value: baseEventsData.summary.totalParticipants,
+      value: baseSummary.totalParticipants,
       label: "Total Participants",
     },
     {
       id: "s3",
-      value: baseEventsData.summary.completedThisMonth,
+      value: baseSummary.completedThisMonth,
       label: "Completed this Month",
     },
     {
       id: "s4",
-      value: baseEventsData.summary.avgAttendance,
+      value: baseSummary.avgAttendance,
       label: "Avg Attendance",
     },
   ];
 
-  const selectedUpcomingEvent = upcomingEvents.find(
+  const selectedUpcomingEvent = approvedEvents.find(
     (event) => event.id === selectedUpcomingEventId,
   );
 
@@ -174,45 +134,61 @@ function EventsPage({ activePage, onNavigate }) {
   }
 
   function handleEventSubmit({ mode, event }) {
-    if (mode === "edit") {
-      setUpcomingEvents((currentEvents) =>
-        currentEvents.map((currentEvent) =>
-          currentEvent.id === event.id
-            ? { ...currentEvent, ...event }
-            : currentEvent,
-        ),
-      );
-      setSelectedUpcomingEventId(event.id);
-      return { updatedEventId: event.id };
+    const eventDate = new Date(`${event.date}T${event.time || "00:00"}:00`);
+    if (Number.isNaN(eventDate.getTime())) {
+      const invalidMessage = "Please enter a valid date and time.";
+      setErrorMessage(invalidMessage);
+      return;
     }
 
-    const nextId =
-      upcomingEvents.reduce(
-        (maxId, currentEvent) => Math.max(maxId, currentEvent.id),
-        0,
-      ) + 1;
+    if (mode === "edit") {
+      updateEvent(event.id, {
+        title: event.title,
+        event_date: eventDate.toISOString(),
+      })
+        .then((updated) => {
+          setErrorMessage("");
+          setUpcomingEvents((currentEvents) =>
+            currentEvents.map((currentEvent) =>
+              currentEvent.id === updated.id ? updated : currentEvent,
+            ),
+          );
+          setSelectedUpcomingEventId(updated.id);
+        })
+        .catch((error) => {
+          setErrorMessage(error.message || "Failed to update event");
+        });
+      return;
+    }
 
-    setUpcomingEvents((currentEvents) => [
-      ...currentEvents,
-      {
-        ...event,
-        id: nextId,
-        registeredLabel: event.registeredLabel || null,
-        participants: event.participants || [],
-        coverImage: event.coverImage || safetyDrillImage,
-      },
-    ]);
+    if (!campusId) {
+      const noCampusMessage = "No campus available. Create a campus first.";
+      setErrorMessage(noCampusMessage);
+      return;
+    }
 
-    setSelectedUpcomingEventId(nextId);
-    return { createdEventId: nextId };
+    createEvent({
+      title: event.title,
+      event_date: eventDate.toISOString(),
+      campus_id: campusId,
+      host_type: "admin",
+    })
+      .then((created) => {
+        setErrorMessage("");
+        setUpcomingEvents((currentEvents) => [...currentEvents, created]);
+        setSelectedUpcomingEventId(created.id);
+      })
+      .catch((error) => {
+        setErrorMessage(error.message || "Failed to create event");
+      });
   }
 
   return (
     <div className="admin-layout">
-      <AdminHeader />
+      <AdminHeader {...headerProps} />
 
       <div className="admin-body">
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar />
 
         <main className="admin-content">
           <div className="standard-page-content">
@@ -256,7 +232,7 @@ function EventsPage({ activePage, onNavigate }) {
                   <div className="event-details-cover">
                     <h3>Cover image</h3>
                     <img
-                      src={selectedUpcomingEvent.coverImage}
+                      src={selectedUpcomingEvent.coverImage || safetyDrillImage}
                       alt={`${selectedUpcomingEvent.title} cover`}
                     />
                   </div>
@@ -317,39 +293,49 @@ function EventsPage({ activePage, onNavigate }) {
 
                 <section className="event-section-card">
                   <h2 className="event-section-title">Upcoming Events</h2>
+                  {isLoading ? <p>Loading events...</p> : null}
+                  {errorMessage ? (
+                    <p className="app-message-error">{errorMessage}</p>
+                  ) : null}
 
                   <div className="event-list">
-                    {upcomingEvents.map((event) => (
-                      <div key={event.id} className="event-item">
-                        <div className="event-item-left">
-                          <h3>{event.title}</h3>
+                    {approvedEvents.length === 0 ? (
+                      <p>No approved events found.</p>
+                    ) : (
+                      approvedEvents.map((event) => (
+                        <div key={event.id} className="event-item">
+                          <div className="event-item-left">
+                            <h3>{event.title}</h3>
 
-                          <div className="event-meta-row">
-                            <span>{event.schedule}</span>
-                            <span>{event.location}</span>
-                            {event.capacity ? (
-                              <span>{event.capacity}</span>
+                            <div className="event-meta-row">
+                              <span>{event.schedule}</span>
+                              <span>{event.location}</span>
+                              {event.capacity ? (
+                                <span>{event.capacity}</span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="event-item-right">
+                            {event.registeredLabel ? (
+                              <span className="event-registered-text">
+                                {event.registeredLabel}
+                              </span>
                             ) : null}
+
+                            <button
+                              type="button"
+                              className="event-link-button"
+                              onClick={() =>
+                                setSelectedUpcomingEventId(event.id)
+                              }
+                            >
+                              View Details
+                            </button>
                           </div>
                         </div>
-
-                        <div className="event-item-right">
-                          {event.registeredLabel ? (
-                            <span className="event-registered-text">
-                              {event.registeredLabel}
-                            </span>
-                          ) : null}
-
-                          <button
-                            type="button"
-                            className="event-link-button"
-                            onClick={() => setSelectedUpcomingEventId(event.id)}
-                          >
-                            View Details
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </section>
 
@@ -357,24 +343,28 @@ function EventsPage({ activePage, onNavigate }) {
                   <h2 className="event-section-title">Events history</h2>
 
                   <div className="event-list">
-                    {baseEventsData.historyEvents.map((event) => (
-                      <div key={event.id} className="event-item">
-                        <div className="event-item-left">
-                          <h3>{event.title}</h3>
+                    {historyEvents.length === 0 ? (
+                      <p>No pending event approvals.</p>
+                    ) : (
+                      historyEvents.map((event) => (
+                        <div key={event.id} className="event-item">
+                          <div className="event-item-left">
+                            <h3>{event.title}</h3>
 
-                          <div className="event-meta-row">
-                            <span>{event.schedule}</span>
-                            <span>{event.participantsLabel}</span>
+                            <div className="event-meta-row">
+                              <span>{event.schedule}</span>
+                              <span>{event.participantsLabel}</span>
+                            </div>
+                          </div>
+
+                          <div className="event-item-right">
+                            <span className="event-status-badge">
+                              {event.status}
+                            </span>
                           </div>
                         </div>
-
-                        <div className="event-item-right">
-                          <span className="event-status-badge">
-                            {event.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </section>
               </>

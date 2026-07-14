@@ -6,8 +6,9 @@ import {
   CheckCircleIcon,
   ArrowLeftIcon,
 } from "@phosphor-icons/react";
+import { sendAlert } from "../services/alertsservice";
 
-function SendAlertForm({ onClose }) {
+function SendAlertForm({ onClose, onAlertSent }) {
   const [formData, setFormData] = useState({
     alertTitle: "",
     building: "",
@@ -15,6 +16,8 @@ function SendAlertForm({ onClose }) {
   });
 
   const [modalStep, setModalStep] = useState("form");
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   const alertTypeConfig = {
     "Campus Weather Alert": {
@@ -131,8 +134,26 @@ function SendAlertForm({ onClose }) {
     setModalStep("form");
   }
 
-  function handleConfirmSend() {
-    setModalStep("sent-success");
+  async function handleConfirmSend() {
+    try {
+      setSendError("");
+      setIsSending(true);
+      await sendAlert({
+        message: formData.message,
+        alert_type: formData.alertTitle || null,
+      });
+
+      if (onAlertSent) {
+        await onAlertSent();
+      }
+
+      setModalStep("sent-success");
+    } catch (error) {
+      setSendError(error.message || "Failed to send alert");
+      setModalStep("form");
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -277,13 +298,16 @@ function SendAlertForm({ onClose }) {
                 type="button"
                 className="alert-submit-button active"
                 onClick={handleConfirmSend}
+                disabled={isSending}
               >
                 <CheckCircleIcon size={28} weight="bold" />
-                Send alert
+                {isSending ? "Sending..." : "Send alert"}
               </button>
             </div>
           </div>
         )}
+
+        {sendError ? <p className="app-message-error">{sendError}</p> : null}
 
         {modalStep === "confirm-cancel" && (
           <div className="alert-confirm-content alert-confirm-cancel-content">
