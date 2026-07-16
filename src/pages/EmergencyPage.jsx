@@ -32,9 +32,21 @@ function EmergencyPage({ headerProps }) {
 
     const socket = new WebSocket(WS_URL);
     socket.onmessage = (event) => {
-      const message = String(event.data || "");
-      if (message === "SOS_ACTIVE" || message === "PUSH_SOS_ACTIVE") {
+      const raw = String(event.data || "").trim();
+
+      if (raw === "SOS_ACTIVE" || raw === "PUSH_SOS_ACTIVE") {
         loadSosEvents();
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        const eventName = parsed?.event || parsed?.type;
+        if (eventName === "SOS_ACTIVE" || eventName === "PUSH_SOS_ACTIVE") {
+          loadSosEvents();
+        }
+      } catch {
+        // Ignore non-JSON messages
       }
     };
 
