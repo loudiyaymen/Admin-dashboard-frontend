@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   XIcon,
   CalendarBlankIcon,
@@ -16,6 +16,7 @@ const requiredFields = [
   "date",
   "time",
   "type",
+  "campusId",
   "registrationStartDate",
   "registrationStartTime",
   "registrationEndDate",
@@ -30,6 +31,7 @@ function buildFormData(initialData) {
       date: "",
       time: "",
       type: "",
+      campusId: "",
       location: "",
       registrationStartDate: "",
       registrationStartTime: "",
@@ -53,6 +55,7 @@ function buildFormData(initialData) {
     date: initialData.date || "",
     time: initialData.time || "",
     type: initialData.type || "",
+    campusId: initialData.campusId || initialData.raw?.campus_id || "",
     location: initialData.location || "",
     registrationStartDate:
       initialData.registrationStartDate || initialData.date || "",
@@ -82,12 +85,26 @@ function CreateEventForm({
   onClose,
   mode = "create",
   initialData = null,
+  campuses = [],
   onSubmitEvent,
 }) {
   const [formData, setFormData] = useState(() => buildFormData(initialData));
 
   const [errors, setErrors] = useState({});
   const [confirmStep, setConfirmStep] = useState("none");
+
+  const campusOptions = useMemo(
+    () =>
+      (Array.isArray(campuses) ? campuses : []).map((campus) => ({
+        campusId: campus?.campus_id || "",
+        name: String(campus?.name || "").trim(),
+      })),
+    [campuses],
+  );
+
+  const selectedCampus = campusOptions.find(
+    (campus) => campus.campusId === formData.campusId,
+  );
 
   function handleChange(event) {
     const { name, value, type, checked, files } = event.target;
@@ -154,7 +171,8 @@ function CreateEventForm({
       date: formData.date,
       time: formData.time,
       type: formData.type,
-      location: formData.location,
+      campusId: formData.campusId,
+      location: selectedCampus?.name || formData.location,
       schedule: `${formData.date} at ${formData.time}`,
       capacity: formData.unlimitedParticipants
         ? "Unlimited"
@@ -291,13 +309,32 @@ function CreateEventForm({
               label="Location"
               icon={<MapPinIcon size={20} className="event-field-icon" />}
               input={
-                <input
-                  className="event-input"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="(e.g. Building C, Room 112)"
-                />
+                <div className="select-wrapper">
+                  <select
+                    className={getInputClass("campusId")}
+                    name="campusId"
+                    value={formData.campusId}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select a campus</option>
+                    {campusOptions.map((campus) => {
+                      const isPembroke =
+                        campus.name.toLowerCase() === "pembroke";
+                      return (
+                        <option
+                          key={campus.campusId}
+                          value={campus.campusId}
+                          disabled={isPembroke}
+                        >
+                          {isPembroke
+                            ? `${campus.name} (Coming soon)`
+                            : campus.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <CaretDownIcon size={20} className="select-icon" />
+                </div>
               }
             />
 

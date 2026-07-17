@@ -28,6 +28,7 @@ function EventsPage({ headerProps }) {
   const [eventFormMode, setEventFormMode] = useState("create");
   const [selectedUpcomingEventId, setSelectedUpcomingEventId] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [campuses, setCampuses] = useState([]);
   const [campusId, setCampusId] = useState(searchParams.get("campusId") || "");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +41,7 @@ function EventsPage({ headerProps }) {
         fetchCampuses(),
       ]);
       setUpcomingEvents(events);
+      setCampuses(campuses);
       if (campuses.length > 0) {
         setCampusId(campuses[0].campus_id);
       }
@@ -134,6 +136,14 @@ function EventsPage({ headerProps }) {
   }
 
   function handleEventSubmit({ mode, event }) {
+    const selectedCampusId = event.campusId || campusId;
+
+    if (!selectedCampusId) {
+      const noCampusMessage = "No campus available. Create a campus first.";
+      setErrorMessage(noCampusMessage);
+      return;
+    }
+
     const eventDate = new Date(`${event.date}T${event.time || "00:00"}:00`);
     if (Number.isNaN(eventDate.getTime())) {
       const invalidMessage = "Please enter a valid date and time.";
@@ -141,11 +151,50 @@ function EventsPage({ headerProps }) {
       return;
     }
 
+    const registrationStartAt = new Date(
+      `${event.registrationStartDate}T${event.registrationStartTime || "00:00"}:00`,
+    );
+    const registrationEndAt = new Date(
+      `${event.registrationEndDate}T${event.registrationEndTime || "00:00"}:00`,
+    );
+
+    if (
+      Number.isNaN(registrationStartAt.getTime()) ||
+      Number.isNaN(registrationEndAt.getTime())
+    ) {
+      setErrorMessage("Please enter valid registration start and end dates.");
+      return;
+    }
+
+    const capacityRaw = String(event.capacity || "");
+    const parsedCapacity = parseInt(capacityRaw, 10);
+    const isUnlimited = capacityRaw.toLowerCase() === "unlimited";
+    const feeRaw = String(event.eventFee || "").replace(/[^0-9.]/g, "");
+    const feeCents = feeRaw ? Math.round(parseFloat(feeRaw) * 100) : null;
+
+    const apiPayload = {
+      title: event.title,
+      event_date: eventDate.toISOString(),
+      campus_id: selectedCampusId,
+      host_type: "admin",
+      event_type: event.type,
+      description: event.details || "",
+      location_text: event.location || "",
+      registration_start_at: registrationStartAt.toISOString(),
+      registration_end_at: registrationEndAt.toISOString(),
+      max_participants: isUnlimited
+        ? null
+        : Number.isNaN(parsedCapacity)
+          ? null
+          : parsedCapacity,
+      is_unlimited: isUnlimited,
+      event_url: event.url || "",
+      fee_cents: Number.isFinite(feeCents) ? feeCents : null,
+      event_image_url: event.coverImage || null,
+    };
+
     if (mode === "edit") {
-      updateEvent(event.id, {
-        title: event.title,
-        event_date: eventDate.toISOString(),
-      })
+      updateEvent(event.id, apiPayload)
         .then((updated) => {
           setErrorMessage("");
           setUpcomingEvents((currentEvents) =>
@@ -161,18 +210,7 @@ function EventsPage({ headerProps }) {
       return;
     }
 
-    if (!campusId) {
-      const noCampusMessage = "No campus available. Create a campus first.";
-      setErrorMessage(noCampusMessage);
-      return;
-    }
-
-    createEvent({
-      title: event.title,
-      event_date: eventDate.toISOString(),
-      campus_id: campusId,
-      host_type: "admin",
-    })
+    createEvent(apiPayload)
       .then((created) => {
         setErrorMessage("");
         setUpcomingEvents((currentEvents) => [...currentEvents, created]);
@@ -377,6 +415,7 @@ function EventsPage({ headerProps }) {
         <CreateEventForm
           mode={eventFormMode}
           initialData={eventFormMode === "edit" ? selectedUpcomingEvent : null}
+          campuses={campuses}
           onSubmitEvent={handleEventSubmit}
           onClose={() => setShowCreateEvent(false)}
         />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   XIcon,
   CaretDownIcon,
@@ -7,6 +7,7 @@ import {
   ArrowLeftIcon,
 } from "@phosphor-icons/react";
 import { sendAlert } from "../services/alertsservice";
+import { fetchBuildings } from "../services/buildingService";
 
 function SendAlertForm({ onClose, onAlertSent }) {
   const [formData, setFormData] = useState({
@@ -18,6 +19,30 @@ function SendAlertForm({ onClose, onAlertSent }) {
   const [modalStep, setModalStep] = useState("form");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [buildings, setBuildings] = useState([]);
+  const [, setBuildingsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadBuildings() {
+      try {
+        setBuildingsLoading(true);
+        const buildingData = await fetchBuildings();
+        setBuildings(buildingData);
+      } catch (error) {
+        console.error("Failed to load buildings:", error);
+        setBuildings([
+          { building_id: "all", name: "All Buildings" },
+          { building_id: "bldg-a", name: "Building A" },
+          { building_id: "bldg-b", name: "Building B" },
+          { building_id: "bldg-c", name: "Building C" },
+        ]);
+      } finally {
+        setBuildingsLoading(false);
+      }
+    }
+
+    loadBuildings();
+  }, []);
 
   const alertTypeConfig = {
     "Campus Weather Alert": {
@@ -64,14 +89,13 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
   const alertTypeOptions = Object.keys(alertTypeConfig);
 
-  const buildingOptions = [
-    "All Buildings",
-    "Building A",
-    "Building B",
-    "Building C",
-    "Library",
-    "Student Commons",
-  ];
+  const buildingMap = {};
+  buildingMap["All Buildings"] = null;
+  buildings.forEach((b) => {
+    buildingMap[b.name] = b.building_id;
+  });
+
+  const buildingOptions = ["All Buildings", ...buildings.map((b) => b.name)];
 
   function getAutoMessage(alertTitle, building) {
     const selectedAlert = alertTypeConfig[alertTitle];
@@ -138,9 +162,11 @@ function SendAlertForm({ onClose, onAlertSent }) {
     try {
       setSendError("");
       setIsSending(true);
+      const buildingId = buildingMap[formData.building] ?? null;
       await sendAlert({
         message: formData.message,
         alert_type: formData.alertTitle || null,
+        building_id: buildingId,
       });
 
       if (onAlertSent) {
