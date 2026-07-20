@@ -1,4 +1,4 @@
-import { apiRequest } from "./apiClient";
+import { apiRequest, API_BASE_URL } from "./apiClient";
 
 function toUiStatus(status) {
   if (status === "resolved") return "Resolved";
@@ -10,7 +10,7 @@ function toUiCategory(type) {
     case "lost_item":
       return "Lost item";
     case "safety_concern":
-      return "Incident";
+      return "Safety";
     case "sexual_violence":
       return "Incident";
     case "damaged_vehicle":
@@ -27,7 +27,19 @@ function formatDateTime(value) {
   return date.toISOString().slice(0, 16).replace("T", " ");
 }
 
+function resolveMediaUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  const origin = API_BASE_URL.replace(/\/api\/v1$/, "");
+  const normalizedPath = String(url).startsWith("/")
+    ? String(url)
+    : `/${String(url)}`;
+  return `${origin}${normalizedPath}`;
+}
+
 export function mapReportToUi(report) {
+  const attachmentUrl = resolveMediaUrl(report.photo_url);
+
   return {
     reportId: report.id,
     title: report.description || "Report",
@@ -45,7 +57,15 @@ export function mapReportToUi(report) {
       dateOfIncident: formatDateTime(report.created_at).split(" ")[0],
       timeOfIncident: formatDateTime(report.created_at).split(" ")[1] || "-",
     },
-    attachments: [],
+    attachments: attachmentUrl
+      ? [
+          {
+            id: `${report.id}-photo`,
+            src: attachmentUrl,
+            alt: "Report attachment",
+          },
+        ]
+      : [],
   };
 }
 

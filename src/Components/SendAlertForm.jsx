@@ -1,13 +1,44 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   XIcon,
   CaretDownIcon,
-  WarningCircleIcon,
-  CheckCircleIcon,
+  CheckIcon,
   ArrowLeftIcon,
+  ExclamationMarkIcon,
 } from "@phosphor-icons/react";
 import { sendAlert } from "../services/alertsservice";
 import { fetchBuildings } from "../services/buildingService";
+
+const DEFAULT_BUILDING_NAMES = [
+  "Building A",
+  "Building B",
+  "Building C",
+  "Building CA",
+  "Building D",
+  "Building E",
+  "Building F",
+  "Building H",
+  "Building J",
+  "Building N",
+  "Building P",
+  "Building T",
+  "Building V",
+  "Building X",
+  "Building Z",
+];
+
+function normalizeBuildingName(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase();
+}
+
+function createFallbackBuildings() {
+  return DEFAULT_BUILDING_NAMES.map((name) => ({
+    building_id: normalizeBuildingName(name).replace(/\s+/g, "-"),
+    name,
+  }));
+}
 
 function SendAlertForm({ onClose, onAlertSent }) {
   const [formData, setFormData] = useState({
@@ -20,6 +51,8 @@ function SendAlertForm({ onClose, onAlertSent }) {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const [buildings, setBuildings] = useState([]);
+  const [buildingSearch, setBuildingSearch] = useState("");
+  const [isBuildingDropdownOpen, setIsBuildingDropdownOpen] = useState(false);
   const [, setBuildingsLoading] = useState(true);
 
   useEffect(() => {
@@ -27,15 +60,25 @@ function SendAlertForm({ onClose, onAlertSent }) {
       try {
         setBuildingsLoading(true);
         const buildingData = await fetchBuildings();
-        setBuildings(buildingData);
+        const orderedBuildings = DEFAULT_BUILDING_NAMES.map((name) => {
+          const matchedBuilding = buildingData.find(
+            (building) =>
+              normalizeBuildingName(building.name) ===
+              normalizeBuildingName(name),
+          );
+
+          return (
+            matchedBuilding || {
+              building_id: normalizeBuildingName(name).replace(/\s+/g, "-"),
+              name,
+            }
+          );
+        });
+
+        setBuildings(orderedBuildings);
       } catch (error) {
         console.error("Failed to load buildings:", error);
-        setBuildings([
-          { building_id: "all", name: "All Buildings" },
-          { building_id: "bldg-a", name: "Building A" },
-          { building_id: "bldg-b", name: "Building B" },
-          { building_id: "bldg-c", name: "Building C" },
-        ]);
+        setBuildings(createFallbackBuildings());
       } finally {
         setBuildingsLoading(false);
       }
@@ -95,7 +138,22 @@ function SendAlertForm({ onClose, onAlertSent }) {
     buildingMap[b.name] = b.building_id;
   });
 
-  const buildingOptions = ["All Buildings", ...buildings.map((b) => b.name)];
+  const buildingOptions = useMemo(
+    () => ["All Buildings", ...buildings.map((b) => b.name)],
+    [buildings],
+  );
+
+  const buildingMatches = useMemo(() => {
+    const query = buildingSearch.trim().toLowerCase();
+
+    if (!query) {
+      return buildingOptions;
+    }
+
+    return buildingOptions.filter((building) =>
+      building.toLowerCase().includes(query),
+    );
+  }, [buildingOptions, buildingSearch]);
 
   function getAutoMessage(alertTitle, building) {
     const selectedAlert = alertTypeConfig[alertTitle];
@@ -128,11 +186,19 @@ function SendAlertForm({ onClose, onAlertSent }) {
         const nextAlertConfig = alertTypeConfig[value];
         if (!nextAlertConfig?.requiresBuilding) {
           updatedData.building = "All Buildings";
+          setBuildingSearch("All Buildings");
+          setIsBuildingDropdownOpen(false);
+        } else if (
+          !currentData.building ||
+          currentData.building === "All Buildings"
+        ) {
+          setBuildingSearch("");
         }
         updatedData.message = getAutoMessage(value, updatedData.building);
       }
 
       if (name === "building" && updatedData.alertTitle && requiresBuilding) {
+        setBuildingSearch(value);
         updatedData.message = getAutoMessage(updatedData.alertTitle, value);
       }
 
@@ -147,7 +213,12 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
   const isFormValid =
     formData.alertTitle.trim() !== "" &&
-    (!requiresBuilding || formData.building.trim() !== "") &&
+    (!requiresBuilding ||
+      buildingOptions.some(
+        (building) =>
+          building.toLowerCase() === formData.building.trim().toLowerCase() &&
+          building !== "All Buildings",
+      )) &&
     formData.message.trim() !== "";
 
   function handleCancelClick() {
@@ -162,7 +233,12 @@ function SendAlertForm({ onClose, onAlertSent }) {
     try {
       setSendError("");
       setIsSending(true);
-      const buildingId = buildingMap[formData.building] ?? null;
+      const selectedBuilding =
+        buildingOptions.find(
+          (building) =>
+            building.toLowerCase() === formData.building.trim().toLowerCase(),
+        ) || formData.building;
+      const buildingId = buildingMap[selectedBuilding] ?? null;
       await sendAlert({
         message: formData.message,
         alert_type: formData.alertTitle || null,
@@ -237,22 +313,67 @@ function SendAlertForm({ onClose, onAlertSent }) {
                     Building <span className="required-mark">*</span>
                   </span>
 
-                  <div className="select-wrapper">
-                    <select
+                  <div className="building-dropdown-wrap">
+                    <input
+                      type="text"
                       name="building"
-                      value={formData.building}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select a building</option>
-                      {buildingOptions.map((building) => (
-                        <option key={building} value={building}>
-                          {building}
-                        </option>
-                      ))}
-                    </select>
+                      value={buildingSearch}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setBuildingSearch(value);
+                        setIsBuildingDropdownOpen(true);
+                        handleChange({
+                          target: {
+                            name: "building",
+                            value,
+                          },
+                        });
+                      }}
+                      onFocus={() => setIsBuildingDropdownOpen(true)}
+                      onBlur={() => {
+                        window.setTimeout(() => {
+                          setIsBuildingDropdownOpen(false);
+                        }, 120);
+                      }}
+                      placeholder="Search buildings"
+                    />
 
-                    <CaretDownIcon size={20} className="select-icon" />
+                    {isBuildingDropdownOpen ? (
+                      <div
+                        className="building-dropdown"
+                        role="listbox"
+                        aria-label="Building options"
+                      >
+                        {buildingMatches.length > 0 ? (
+                          buildingMatches.map((building) => (
+                            <button
+                              key={building}
+                              type="button"
+                              className="building-dropdown-item"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                setBuildingSearch(building);
+                                setFormData((currentData) => ({
+                                  ...currentData,
+                                  building,
+                                  message: getAutoMessage(
+                                    currentData.alertTitle,
+                                    building,
+                                  ),
+                                }));
+                                setIsBuildingDropdownOpen(false);
+                              }}
+                            >
+                              {building}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="building-dropdown-empty">
+                            No buildings found.
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 </label>
               )}
@@ -303,7 +424,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
         {modalStep === "confirm-send" && (
           <div className="alert-confirm-content alert-confirm-send-content">
             <div className="alert-status-icon alert-status-icon-warning">
-              <WarningCircleIcon size={44} weight="fill" />
+              <span className="alert-status-exclamation">!</span>
             </div>
 
             <div className="alert-confirm-text">
@@ -326,7 +447,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
                 onClick={handleConfirmSend}
                 disabled={isSending}
               >
-                <CheckCircleIcon size={28} weight="bold" />
+                <CheckIcon size={28} weight="bold" />
                 {isSending ? "Sending..." : "Send alert"}
               </button>
             </div>
@@ -338,7 +459,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
         {modalStep === "confirm-cancel" && (
           <div className="alert-confirm-content alert-confirm-cancel-content">
             <div className="alert-status-icon alert-status-icon-warning">
-              <WarningCircleIcon size={44} weight="fill" />
+              <ExclamationMarkIcon size={44} weight="regular" />
             </div>
 
             <div className="alert-confirm-text">
@@ -370,7 +491,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
         {modalStep === "sent-success" && (
           <div className="alert-confirm-content alert-confirm-success-content">
             <div className="alert-status-icon alert-status-icon-success">
-              <CheckCircleIcon size={44} weight="fill" />
+              <CheckIcon size={44} weight="regular" />
             </div>
 
             <div className="alert-confirm-text">
@@ -400,7 +521,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
                 className="alert-submit-button active"
                 onClick={onClose}
               >
-                <CheckCircleIcon size={28} weight="bold" />
+                <CheckIcon size={28} weight="bold" />
                 Done
               </button>
             </div>

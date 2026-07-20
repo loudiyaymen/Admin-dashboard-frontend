@@ -5,10 +5,10 @@ import {
   ClockIcon,
   MapPinIcon,
   UserIcon,
-  CheckCircleIcon,
+  CheckIcon,
   ImageSquareIcon,
   CaretDownIcon,
-  WarningCircleIcon,
+  ExclamationMarkIcon,
 } from "@phosphor-icons/react";
 
 const requiredFields = [
@@ -184,6 +184,8 @@ function CreateEventForm({
       registrationEndDate: formData.registrationEndDate,
       registrationEndTime: formData.registrationEndTime,
       url: formData.url,
+      eventImage: formData.eventImage,
+      coverImage: initialData?.coverImage || null,
     };
 
     let submitResult = null;
@@ -305,13 +307,13 @@ function CreateEventForm({
               }
             />
 
-            <IconField
+            <FormField
               label="Location"
               icon={<MapPinIcon size={20} className="event-field-icon" />}
               input={
                 <div className="select-wrapper">
                   <select
-                    className={getInputClass("campusId")}
+                    className={`${getInputClass("campusId")} event-campus-select`}
                     name="campusId"
                     value={formData.campusId}
                     onChange={handleChange}
@@ -511,7 +513,7 @@ function CreateEventForm({
               </button>
 
               <button type="submit" className="event-submit-button">
-                <CheckCircleIcon size={20} />
+                <CheckIcon size={20} />
                 <span>{mode === "edit" ? "Edit event" : "Create event"}</span>
               </button>
             </div>
@@ -530,7 +532,7 @@ function CreateEventForm({
           >
             <div className="event-edit-confirm-content">
               <div className="event-edit-confirm-icon">
-                <WarningCircleIcon size={44} weight="fill" />
+                <ExclamationMarkIcon size={44} weight="regular" />
               </div>
 
               <div className="event-edit-confirm-copy">
@@ -570,7 +572,7 @@ function CreateEventForm({
                   className="event-submit-button"
                   onClick={handleConfirmSubmit}
                 >
-                  <CheckCircleIcon size={20} />
+                  <CheckIcon size={20} />
                   <span>Confirm edition</span>
                 </button>
               </div>
@@ -590,7 +592,7 @@ function CreateEventForm({
           >
             <div className="event-edit-confirm-content">
               <div className="event-edit-confirm-icon event-edit-confirm-icon-success">
-                <CheckCircleIcon size={44} weight="fill" />
+                <CheckIcon size={44} weight="regular" />
               </div>
 
               <div className="event-edit-confirm-copy">
@@ -619,7 +621,7 @@ function CreateEventForm({
         >
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="event-create-confirm-icon">
-              <WarningCircleIcon size={36} weight="fill" />
+              <ExclamationMarkIcon size={36} weight="regular" />
             </div>
             <h3>Are you sure you want to create the event?</h3>
 
@@ -648,7 +650,7 @@ function CreateEventForm({
         <div className="confirm-modal-overlay" onClick={handleCloseSuccess}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="event-create-confirm-icon event-create-confirm-icon-success">
-              <CheckCircleIcon size={36} weight="fill" />
+              <CheckIcon size={36} weight="regular" />
             </div>
 
             <h3>Event created successfully</h3>

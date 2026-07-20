@@ -190,7 +190,8 @@ function EventsPage({ headerProps }) {
       is_unlimited: isUnlimited,
       event_url: event.url || "",
       fee_cents: Number.isFinite(feeCents) ? feeCents : null,
-      event_image_url: event.coverImage || null,
+      event_image_url: event.eventImage ? null : event.coverImage || null,
+      eventImage: event.eventImage || null,
     };
 
     if (mode === "edit") {

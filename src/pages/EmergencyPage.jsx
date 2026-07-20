@@ -72,24 +72,42 @@ function EmergencyPage({ headerProps }) {
             <section className="emergency-log-card">
               <h2>Emergency Report Log</h2>
 
-              <div className="emergency-log-table">
-                <div className="emergency-log-header">
-                  <span>ID</span>
-                  <span>Time</span>
-                </div>
+              <table className="emergency-log-table">
+                <thead>
+                  <tr className="emergency-log-header">
+                    <th>ID</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
 
-                {isLoading ? <p>Loading SOS events...</p> : null}
-                {errorMessage ? (
-                  <p className="app-message-error">{errorMessage}</p>
-                ) : null}
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td className="emergency-log-status" colSpan={2}>
+                        Loading SOS events...
+                      </td>
+                    </tr>
+                  ) : null}
 
-                {reports.map((report) => (
-                  <div key={report.id} className="emergency-log-row">
-                    <span>{report.id}</span>
-                    <span>{report.time}</span>
-                  </div>
-                ))}
-              </div>
+                  {errorMessage ? (
+                    <tr>
+                      <td
+                        className="emergency-log-status app-message-error"
+                        colSpan={2}
+                      >
+                        {errorMessage}
+                      </td>
+                    </tr>
+                  ) : null}
+
+                  {reports.map((report) => (
+                    <tr key={report.id} className="emergency-log-row">
+                      <td>{report.id}</td>
+                      <td>{report.time}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </section>
           </div>
         </main>

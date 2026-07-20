@@ -59,6 +59,10 @@ const MOCK_ACTIVE_USERS_TREND = [
   { day: "W8", value: 2845 },
 ];
 
+function formatActivityTick(value) {
+  return String(value || "").replace(/^Day\s*/i, "");
+}
+
 function DashboardPage({ headerProps }) {
   const [metrics, setMetrics] = useState(null);
   const [activityOverviewData, setActivityOverviewData] = useState([]);
@@ -280,6 +284,7 @@ function DashboardPage({ headerProps }) {
                           tick={{ fill: "#7d7d7d", fontSize: 12 }}
                           axisLine={{ stroke: "#7d7d7d" }}
                           tickLine={false}
+                          tickFormatter={formatActivityTick}
                         />
                         <YAxis
                           tick={{ fill: "#7d7d7d", fontSize: 12 }}

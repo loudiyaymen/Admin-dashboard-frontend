@@ -13,13 +13,14 @@ import {
 
 const categoryColorMap = {
   incident: "var(--color-report-incident)",
+  safety: "var(--color-report-incident)",
   "lost item": "var(--color-report-lost-item)",
 };
 
 function renderDistributionAxisTick({ x, y, payload }) {
   return (
     <text x={x - 88} y={y} dy={4} fill="#222" fontSize={14} textAnchor="start">
-      {payload.value}
+      {payload.value == "Safety Concern" ? "Safety" : payload.value}
     </text>
   );
 }

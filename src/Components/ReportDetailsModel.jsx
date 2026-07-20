@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
   ArrowLeftIcon,
-  CheckCircleIcon,
-  WarningCircleIcon,
+  CheckIcon,
+  ExclamationMarkIcon,
 } from "@phosphor-icons/react";
 
 function ReportDetailsModal({ report, onBack, onMarkResolved }) {
@@ -67,7 +67,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           onClick={handleResolveButtonClick}
           disabled={isResolved}
         >
-          <CheckCircleIcon size={20} weight="bold" />
+          <CheckIcon size={20} weight="bold" />
           <span>{isResolved ? "Resolved" : "Mark as resolved"}</span>
         </button>
       </div>
@@ -141,7 +141,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           >
             <div className="report-resolve-modal-content">
               <div className="report-resolve-icon warning">
-                <WarningCircleIcon size={42} weight="fill" />
+                <ExclamationMarkIcon size={42} weight="regular" />
               </div>
 
               <div className="report-resolve-copy">
@@ -163,7 +163,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
                   className="report-resolve-confirm"
                   onClick={handleConfirmResolve}
                 >
-                  <CheckCircleIcon size={20} weight="bold" />
+                  <CheckIcon size={20} weight="bold" />
                   <span>Mark as resolved</span>
                 </button>
               </div>
@@ -183,7 +183,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           >
             <div className="report-resolve-modal-content report-resolve-success-content">
               <div className="report-resolve-icon success">
-                <CheckCircleIcon size={42} weight="fill" />
+                <CheckIcon size={42} weight="regular" />
               </div>
 
               <div className="report-resolve-copy">

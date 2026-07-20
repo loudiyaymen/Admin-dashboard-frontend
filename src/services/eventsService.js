@@ -1,4 +1,12 @@
-import { apiRequest } from "./apiClient";
+import { apiRequest, API_BASE_URL } from "./apiClient";
+
+function resolveImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  const origin = API_BASE_URL.replace(/\/api\/v1$/, "");
+  const normalizedPath = url.startsWith("/") ? url : `/${url}`;
+  return `${origin}${normalizedPath}`;
+}
 
 function toUiEvent(event) {
   const date = event.event_date ? new Date(event.event_date) : null;
@@ -46,7 +54,7 @@ function toUiEvent(event) {
         ? `$${(event.fee_cents / 100).toFixed(2)}`
         : "No fee",
     details: event.description || "",
-    coverImage: event.event_image_url || null,
+    coverImage: resolveImageUrl(event.event_image_url),
     registrationStartDate: validStart
       ? validStart.toISOString().slice(0, 10)
       : dateText,
@@ -79,17 +87,43 @@ export async function fetchCampuses() {
 }
 
 export async function createEvent(payload) {
+  const hasImage = payload?.eventImage instanceof File;
+  const body = hasImage ? new FormData() : JSON.stringify(payload);
+
+  if (hasImage) {
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key === "eventImage") return;
+      if (value === undefined || value === null) return;
+      body.append(key, String(value));
+    });
+    body.append("eventImage", payload.eventImage);
+  }
+
   const created = await apiRequest("/events", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body,
+    isFormData: hasImage,
   });
   return toUiEvent(created);
 }
 
 export async function updateEvent(id, payload) {
+  const hasImage = payload?.eventImage instanceof File;
+  const body = hasImage ? new FormData() : JSON.stringify(payload);
+
+  if (hasImage) {
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key === "eventImage") return;
+      if (value === undefined || value === null) return;
+      body.append(key, String(value));
+    });
+    body.append("eventImage", payload.eventImage);
+  }
+
   const updated = await apiRequest(`/events/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(payload),
+    body,
+    isFormData: hasImage,
   });
   return toUiEvent(updated);
 }
