@@ -317,7 +317,8 @@ function EventsPage({ headerProps }) {
                       className="event-add-button"
                       onClick={handleDrawWinner}
                       disabled={
-                        isDrawingWinner || selectedEventParticipants.length === 0
+                        isDrawingWinner ||
+                        selectedEventParticipants.length === 0
                       }
                     >
                       <span>
@@ -346,7 +347,9 @@ function EventsPage({ headerProps }) {
                             className="event-participants-row"
                           >
                             <span>{participant.name}</span>
-                            <span>{participant.email || participant.deviceId}</span>
+                            <span>
+                              {participant.email || participant.deviceId}
+                            </span>
                           </div>
                         ))
                       )}
