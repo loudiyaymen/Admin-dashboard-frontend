@@ -13,6 +13,7 @@ import {
   createEvent,
   fetchCampuses,
   fetchEvents,
+  drawEventWinner,
   updateEvent,
 } from "../services/eventsService";
 
@@ -31,6 +32,8 @@ function EventsPage({ headerProps }) {
   const [campuses, setCampuses] = useState([]);
   const [campusId, setCampusId] = useState(searchParams.get("campusId") || "");
   const [errorMessage, setErrorMessage] = useState("");
+  const [winnerMessage, setWinnerMessage] = useState("");
+  const [isDrawingWinner, setIsDrawingWinner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   async function loadEvents() {
@@ -91,7 +94,10 @@ function EventsPage({ headerProps }) {
     },
     {
       id: "s2",
-      value: baseSummary.totalParticipants,
+      value: approvedEvents.reduce(
+        (total, event) => total + (event.participants?.length || 0),
+        0,
+      ),
       label: "Total Participants",
     },
     {
@@ -109,6 +115,8 @@ function EventsPage({ headerProps }) {
   const selectedUpcomingEvent = approvedEvents.find(
     (event) => event.id === selectedUpcomingEventId,
   );
+
+  const selectedEventParticipants = selectedUpcomingEvent?.participants || [];
 
   const selectedEventInfoRows = selectedUpcomingEvent
     ? [
@@ -133,6 +141,29 @@ function EventsPage({ headerProps }) {
   function handleEditButtonClick() {
     setEventFormMode("edit");
     setShowCreateEvent(true);
+  }
+
+  async function handleDrawWinner() {
+    if (!selectedUpcomingEvent) return;
+
+    setIsDrawingWinner(true);
+    setErrorMessage("");
+    setWinnerMessage("");
+
+    try {
+      const result = await drawEventWinner(selectedUpcomingEvent.id);
+      const winner = result?.winner;
+      const winnerName = winner?.name || winner?.deviceId || "Unknown winner";
+      const winnerEmail = winner?.email ? ` (${winner.email})` : "";
+
+      setWinnerMessage(
+        `Winner selected: ${winnerName}${winnerEmail}. Participants: ${result?.participantCount ?? selectedEventParticipants.length}`,
+      );
+    } catch (error) {
+      setErrorMessage(error.message || "Failed to draw a winner");
+    } finally {
+      setIsDrawingWinner(false);
+    }
   }
 
   function handleEventSubmit({ mode, event }) {
@@ -278,7 +309,26 @@ function EventsPage({ headerProps }) {
                 </section>
 
                 <section className="event-details-card">
-                  <h2>Participants List</h2>
+                  <div className="event-details-card-header">
+                    <h2>Participants List</h2>
+
+                    <button
+                      type="button"
+                      className="event-add-button"
+                      onClick={handleDrawWinner}
+                      disabled={
+                        isDrawingWinner || selectedEventParticipants.length === 0
+                      }
+                    >
+                      <span>
+                        {isDrawingWinner ? "Drawing winner..." : "Draw winner"}
+                      </span>
+                    </button>
+                  </div>
+
+                  {winnerMessage ? (
+                    <p className="app-message-success">{winnerMessage}</p>
+                  ) : null}
 
                   <div className="event-participants-list">
                     <div className="event-participants-header">
@@ -287,15 +337,19 @@ function EventsPage({ headerProps }) {
                     </div>
 
                     <div className="event-participants-rows">
-                      {selectedUpcomingEvent.participants.map((participant) => (
-                        <div
-                          key={participant.id}
-                          className="event-participants-row"
-                        >
-                          <span>{participant.name}</span>
-                          <span>{participant.email}</span>
-                        </div>
-                      ))}
+                      {selectedEventParticipants.length === 0 ? (
+                        <p>No registrations yet.</p>
+                      ) : (
+                        selectedEventParticipants.map((participant) => (
+                          <div
+                            key={participant.id}
+                            className="event-participants-row"
+                          >
+                            <span>{participant.name}</span>
+                            <span>{participant.email || participant.deviceId}</span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </section>

@@ -29,6 +29,19 @@ function toUiEvent(event) {
       ? registrationEnd
       : null;
 
+  const participants = Array.isArray(event.participants)
+    ? event.participants.map((participant) => ({
+        id:
+          participant.event_id && participant.device_id
+            ? `${participant.event_id}:${participant.device_id}`
+            : participant.device_id,
+        deviceId: participant.device_id || "",
+        name: participant.name || participant.device_id || "Guest",
+        email: participant.email || "",
+        joinedAt: participant.joined_at || null,
+      }))
+    : [];
+
   return {
     id: event.id,
     title: event.title,
@@ -45,7 +58,7 @@ function toUiEvent(event) {
       : event.max_participants
         ? `${event.max_participants} max`
         : null,
-    registeredLabel: null,
+    registeredLabel: `${participants.length} registered`,
     type: event.event_type || event.host_type || "Event",
     date: dateText,
     time: timeText,
@@ -68,7 +81,7 @@ function toUiEvent(event) {
       ? validEnd.toISOString().slice(11, 16)
       : timeText,
     url: event.event_url || "",
-    participants: [],
+    participants,
     isApproved: Boolean(event.is_approved),
     raw: event,
   };
@@ -126,4 +139,12 @@ export async function updateEvent(id, payload) {
     isFormData: hasImage,
   });
   return toUiEvent(updated);
+}
+
+export async function drawEventWinner(id) {
+  const result = await apiRequest(`/events/${id}/drawWinner`, {
+    method: "POST",
+  });
+
+  return result;
 }
