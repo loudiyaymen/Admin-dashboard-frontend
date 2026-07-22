@@ -12,7 +12,7 @@ function ReportsSearch({ searchText, onSearchChange }) {
         <MagnifyingGlassIcon className="search-icon" size={18} />
         <input
           id="reportSearch"
-          type="text"
+          type="search"
           placeholder="Search by title or ID"
           value={searchText}
           onChange={(event) => onSearchChange(event.target.value)}

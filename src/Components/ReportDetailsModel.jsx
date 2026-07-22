@@ -3,12 +3,14 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   ExclamationMarkIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 
 function ReportDetailsModal({ report, onBack, onMarkResolved }) {
   const [showResolveConfirm, setShowResolveConfirm] = useState(false);
   const [showResolveSuccess, setShowResolveSuccess] = useState(false);
   const [resolveError, setResolveError] = useState("");
+  const [activeAttachment, setActiveAttachment] = useState(null);
 
   if (!report) {
     return null;
@@ -34,10 +36,21 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
   ];
 
   const isResolved = report.status.toLowerCase() === "resolved";
+  const attachments = Array.isArray(report.attachments)
+    ? report.attachments
+    : [];
 
   function handleResolveButtonClick() {
     if (isResolved) return;
     setShowResolveConfirm(true);
+  }
+
+  function openAttachmentViewer(attachment) {
+    setActiveAttachment(attachment);
+  }
+
+  function closeAttachmentViewer() {
+    setActiveAttachment(null);
   }
 
   async function handleConfirmResolve() {
@@ -109,16 +122,23 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           <div className="report-detail-field">
             <h3>Attachments</h3>
             <div className="report-attachment-list">
-              {report.attachments.length === 0 ? (
+              {attachments.length === 0 ? (
                 <p>No attachments</p>
               ) : (
-                report.attachments.map((attachment) => (
-                  <img
+                attachments.map((attachment) => (
+                  <button
                     key={attachment.id}
-                    src={attachment.src}
-                    alt={attachment.alt}
-                    className="report-attachment-image"
-                  />
+                    type="button"
+                    className="report-attachment-button"
+                    onClick={() => openAttachmentViewer(attachment)}
+                    aria-label={`Open attachment ${attachment.alt}`}
+                  >
+                    <img
+                      src={attachment.src}
+                      alt={attachment.alt}
+                      className="report-attachment-image"
+                    />
+                  </button>
                 ))
               )}
             </div>
@@ -204,6 +224,37 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           </div>
         </div>
       )}
+
+      {activeAttachment ? (
+        <div
+          className="report-image-viewer-overlay"
+          onClick={closeAttachmentViewer}
+        >
+          <div
+            className="report-image-viewer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="report-image-viewer-close"
+              onClick={closeAttachmentViewer}
+              aria-label="Close attachment preview"
+            >
+              <XIcon size={22} />
+            </button>
+
+            <img
+              src={activeAttachment.src}
+              alt={activeAttachment.alt}
+              className="report-image-viewer-image"
+            />
+
+            <p className="report-image-viewer-caption">
+              {activeAttachment.alt}
+            </p>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

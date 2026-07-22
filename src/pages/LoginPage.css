@@ -115,8 +115,19 @@
   box-shadow: 0 0 0 3px rgba(27, 92, 58, 0.1);
 }
 
+.input-wrapper input.input-error {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+}
+
 .input-wrapper input::placeholder {
   color: #999;
+}
+
+.field-error-text {
+  color: #d32f2f;
+  font-size: 13px;
+  margin: 0;
 }
 
 .login-error {

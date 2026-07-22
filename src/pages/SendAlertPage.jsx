@@ -133,7 +133,7 @@ function SendAlertPage({ headerProps }) {
                 <div className="search-input-wrapper notification-search">
                   <MagnifyingGlassIcon size={20} className="search-icon" />
                   <input
-                    type="text"
+                    type="search"
                     placeholder="Search notifications"
                     value={searchText}
                     onChange={handleSearchChange}

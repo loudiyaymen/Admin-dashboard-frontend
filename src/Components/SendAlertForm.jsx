@@ -8,6 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import { sendAlert } from "../services/alertsservice";
 import { fetchBuildings } from "../services/buildingService";
+import { isNonEmptyString } from "../utils/formValidation";
 
 const DEFAULT_BUILDING_NAMES = [
   "Building A",
@@ -53,6 +54,8 @@ function SendAlertForm({ onClose, onAlertSent }) {
   const [buildings, setBuildings] = useState([]);
   const [buildingSearch, setBuildingSearch] = useState("");
   const [isBuildingDropdownOpen, setIsBuildingDropdownOpen] = useState(false);
+  const [touchedFields, setTouchedFields] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [, setBuildingsLoading] = useState(true);
 
   useEffect(() => {
@@ -155,6 +158,47 @@ function SendAlertForm({ onClose, onAlertSent }) {
     );
   }, [buildingOptions, buildingSearch]);
 
+  const validationErrors = useMemo(() => {
+    const errors = {};
+    const normalizedBuilding = normalizeBuildingName(
+      buildingSearch || formData.building,
+    );
+    const matchedBuilding = buildingOptions.find(
+      (building) => normalizeBuildingName(building) === normalizedBuilding,
+    );
+
+    if (!isNonEmptyString(formData.alertTitle)) {
+      errors.alertTitle = "Choose an alert type.";
+    }
+
+    if (requiresBuilding) {
+      if (!isNonEmptyString(buildingSearch)) {
+        errors.building = "Choose a building from the list.";
+      } else if (!matchedBuilding || matchedBuilding === "All Buildings") {
+        errors.building = "Select a building from the list.";
+      }
+    }
+
+    if (!isNonEmptyString(formData.message)) {
+      errors.message = "Enter an alert message.";
+    } else if (formData.message.trim().length > 5000) {
+      errors.message = "Alert messages must be 5000 characters or fewer.";
+    }
+
+    return errors;
+  }, [
+    buildingOptions,
+    buildingSearch,
+    formData.alertTitle,
+    formData.building,
+    formData.message,
+    requiresBuilding,
+  ]);
+
+  function shouldShowError(field) {
+    return Boolean(hasSubmitted || touchedFields[field]);
+  }
+
   function getAutoMessage(alertTitle, building) {
     const selectedAlert = alertTypeConfig[alertTitle];
 
@@ -206,26 +250,39 @@ function SendAlertForm({ onClose, onAlertSent }) {
     });
   }
 
+  function handleBlur(field) {
+    setTouchedFields((current) => ({
+      ...current,
+      [field]: true,
+    }));
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
+    setHasSubmitted(true);
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
     setModalStep("confirm-send");
   }
 
-  const isFormValid =
-    formData.alertTitle.trim() !== "" &&
-    (!requiresBuilding ||
-      buildingOptions.some(
-        (building) =>
-          building.toLowerCase() === formData.building.trim().toLowerCase() &&
-          building !== "All Buildings",
-      )) &&
-    formData.message.trim() !== "";
-
-  function handleCancelClick() {
-    setModalStep("confirm-cancel");
-  }
+  const isFormValid = Object.keys(validationErrors).length === 0;
 
   function handleBackToForm() {
+    setModalStep("form");
+  }
+
+  function resetFormToDefaults() {
+    setFormData({
+      alertTitle: "",
+      building: "",
+      message: "",
+    });
+    setBuildingSearch("");
+    setIsBuildingDropdownOpen(false);
+    setTouchedFields({});
+    setHasSubmitted(false);
+    setSendError("");
     setModalStep("form");
   }
 
@@ -259,14 +316,13 @@ function SendAlertForm({ onClose, onAlertSent }) {
   }
 
   return (
-    <div className="alert-modal-overlay" onClick={onClose}>
+    <div className="alert-modal-overlay">
       <div
         className={`alert-modal ${modalStep !== "form" ? "alert-modal-confirm" : ""} ${
           modalStep === "confirm-send" ? "alert-modal-send" : ""
         } ${modalStep === "confirm-cancel" ? "alert-modal-cancel" : ""} ${
           modalStep === "sent-success" ? "alert-modal-success" : ""
         }`}
-        onClick={(event) => event.stopPropagation()}
       >
         {modalStep === "form" && (
           <>
@@ -276,13 +332,13 @@ function SendAlertForm({ onClose, onAlertSent }) {
               <button
                 type="button"
                 className="alert-close-button"
-                onClick={handleCancelClick}
+                onClick={onClose}
               >
                 <XIcon size={24} />
               </button>
             </div>
 
-            <form className="alert-form" onSubmit={handleSubmit}>
+            <form className="alert-form" onSubmit={handleSubmit} noValidate>
               <label className="alert-field">
                 <span>
                   Alert Title <span className="required-mark">*</span>
@@ -290,10 +346,16 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
                 <div className="select-wrapper">
                   <select
+                    className={
+                      shouldShowError("alertTitle") &&
+                      validationErrors.alertTitle
+                        ? "event-input event-input-error"
+                        : "event-input"
+                    }
                     name="alertTitle"
                     value={formData.alertTitle}
                     onChange={handleChange}
-                    required
+                    onBlur={() => handleBlur("alertTitle")}
                   >
                     <option value="">Select an option</option>
                     {alertTypeOptions.map((alertType) => (
@@ -305,6 +367,12 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
                   <CaretDownIcon size={20} className="select-icon" />
                 </div>
+                {shouldShowError("alertTitle") &&
+                validationErrors.alertTitle ? (
+                  <p className="field-error-text">
+                    {validationErrors.alertTitle}
+                  </p>
+                ) : null}
               </label>
 
               {requiresBuilding && (
@@ -315,6 +383,11 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
                   <div className="building-dropdown-wrap">
                     <input
+                      className={
+                        shouldShowError("building") && validationErrors.building
+                          ? "event-input event-input-error"
+                          : "event-input"
+                      }
                       type="text"
                       name="building"
                       value={buildingSearch}
@@ -331,6 +404,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
                       }}
                       onFocus={() => setIsBuildingDropdownOpen(true)}
                       onBlur={() => {
+                        handleBlur("building");
                         window.setTimeout(() => {
                           setIsBuildingDropdownOpen(false);
                         }, 120);
@@ -375,6 +449,11 @@ function SendAlertForm({ onClose, onAlertSent }) {
                       </div>
                     ) : null}
                   </div>
+                  {shouldShowError("building") && validationErrors.building ? (
+                    <p className="field-error-text">
+                      {validationErrors.building}
+                    </p>
+                  ) : null}
                 </label>
               )}
 
@@ -384,14 +463,22 @@ function SendAlertForm({ onClose, onAlertSent }) {
                 </span>
 
                 <textarea
+                  className={
+                    shouldShowError("message") && validationErrors.message
+                      ? "event-input event-input-error"
+                      : "event-input"
+                  }
                   name="message"
                   placeholder="Enter alert message"
                   rows="6"
                   maxLength="5000"
                   value={formData.message}
                   onChange={handleChange}
-                  required
+                  onBlur={() => handleBlur("message")}
                 />
+                {shouldShowError("message") && validationErrors.message ? (
+                  <p className="field-error-text">{validationErrors.message}</p>
+                ) : null}
               </label>
 
               <p className="character-count">
@@ -402,9 +489,9 @@ function SendAlertForm({ onClose, onAlertSent }) {
                 <button
                   type="button"
                   className="alert-cancel-button"
-                  onClick={handleCancelClick}
+                  onClick={resetFormToDefaults}
                 >
-                  Cancel
+                  Reset
                 </button>
 
                 <button

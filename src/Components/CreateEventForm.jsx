@@ -10,41 +10,58 @@ import {
   CaretDownIcon,
   ExclamationMarkIcon,
 } from "@phosphor-icons/react";
+import {
+  combineDateAndTime,
+  isNonEmptyString,
+  isNonNegativeNumberString,
+  isPositiveIntegerString,
+  isDateOnOrAfterToday,
+  isValidDateInput,
+  isValidTimeInput,
+  isValidUrl,
+} from "../utils/formValidation";
 
-const requiredFields = [
-  "title",
-  "date",
-  "time",
-  "type",
-  "campusId",
-  "registrationStartDate",
-  "registrationStartTime",
-  "registrationEndDate",
-  "registrationEndTime",
-  "description",
-];
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalTime(date) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function buildCreateDefaults() {
+  const now = new Date();
+  const later = new Date(now.getTime() + 60 * 60 * 1000);
+
+  return {
+    title: "",
+    date: formatLocalDate(now),
+    time: formatLocalTime(now),
+    type: "",
+    campusId: "",
+    location: "",
+    registrationStartDate: formatLocalDate(now),
+    registrationStartTime: formatLocalTime(now),
+    registrationEndDate: formatLocalDate(later),
+    registrationEndTime: formatLocalTime(later),
+    maxParticipants: "",
+    unlimitedParticipants: false,
+    description: "",
+    url: "",
+    fee: "",
+    noFee: false,
+    eventImage: null,
+  };
+}
 
 function buildFormData(initialData) {
   if (!initialData) {
-    return {
-      title: "",
-      date: "",
-      time: "",
-      type: "",
-      campusId: "",
-      location: "",
-      registrationStartDate: "",
-      registrationStartTime: "",
-      registrationEndDate: "",
-      registrationEndTime: "",
-      maxParticipants: "",
-      unlimitedParticipants: false,
-      description: "",
-      url: "",
-      fee: "",
-      noFee: false,
-      eventImage: null,
-    };
+    return buildCreateDefaults();
   }
 
   const unlimitedParticipants =
@@ -90,8 +107,11 @@ function CreateEventForm({
 }) {
   const [formData, setFormData] = useState(() => buildFormData(initialData));
 
-  const [errors, setErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [confirmStep, setConfirmStep] = useState("none");
+  const isCreateMode = mode === "create";
+  const todayDate = formatLocalDate(new Date());
 
   const campusOptions = useMemo(
     () =>
@@ -105,6 +125,105 @@ function CreateEventForm({
   const selectedCampus = campusOptions.find(
     (campus) => campus.campusId === formData.campusId,
   );
+
+  const validationErrors = useMemo(() => {
+    const errors = {};
+    const selectedCampusId = campusOptions.some(
+      (campus) => campus.campusId === formData.campusId,
+    );
+
+    if (!isNonEmptyString(formData.title)) {
+      errors.title = "Enter an event title.";
+    }
+
+    if (!isValidDateInput(formData.date)) {
+      errors.date = "Choose a valid event date.";
+    } else if (isCreateMode && !isDateOnOrAfterToday(formData.date)) {
+      errors.date = "Choose today or a later event date.";
+    }
+
+    if (!isValidTimeInput(formData.time)) {
+      errors.time = "Choose a valid event time.";
+    }
+
+    if (!isNonEmptyString(formData.type)) {
+      errors.type = "Choose an event type.";
+    }
+
+    if (!selectedCampusId) {
+      errors.campusId = "Choose a campus from the list.";
+    }
+
+    if (!isValidDateInput(formData.registrationStartDate)) {
+      errors.registrationStartDate = "Choose a valid start date.";
+    } else if (
+      isCreateMode &&
+      !isDateOnOrAfterToday(formData.registrationStartDate)
+    ) {
+      errors.registrationStartDate = "Choose today or a later start date.";
+    }
+
+    if (!isValidTimeInput(formData.registrationStartTime)) {
+      errors.registrationStartTime = "Choose a valid start time.";
+    }
+
+    if (!isValidDateInput(formData.registrationEndDate)) {
+      errors.registrationEndDate = "Choose a valid end date.";
+    } else if (
+      isCreateMode &&
+      !isDateOnOrAfterToday(formData.registrationEndDate)
+    ) {
+      errors.registrationEndDate = "Choose today or a later end date.";
+    }
+
+    if (!isValidTimeInput(formData.registrationEndTime)) {
+      errors.registrationEndTime = "Choose a valid end time.";
+    }
+
+    const registrationStart = combineDateAndTime(
+      formData.registrationStartDate,
+      formData.registrationStartTime,
+    );
+    const registrationEnd = combineDateAndTime(
+      formData.registrationEndDate,
+      formData.registrationEndTime,
+    );
+
+    if (
+      registrationStart &&
+      registrationEnd &&
+      registrationEnd < registrationStart
+    ) {
+      errors.registrationEndDate =
+        "Ending registration must be after the starting date and time.";
+      errors.registrationEndTime =
+        "Ending registration must be after the starting date and time.";
+    }
+
+    if (!formData.unlimitedParticipants) {
+      if (!isPositiveIntegerString(formData.maxParticipants)) {
+        errors.maxParticipants = "Enter a whole number greater than 0.";
+      }
+    }
+
+    if (!isNonEmptyString(formData.description)) {
+      errors.description = "Enter a description.";
+    }
+
+    if (!isValidUrl(formData.url)) {
+      errors.url = "Enter a valid URL.";
+    }
+
+    if (!formData.noFee && !isNonNegativeNumberString(formData.fee)) {
+      errors.fee = "Enter a valid fee amount.";
+    }
+
+    return errors;
+  }, [campusOptions, formData, isCreateMode]);
+
+  function shouldShowError(field) {
+    return Boolean(hasSubmitted || touchedFields[field]);
+  }
 
   function handleChange(event) {
     const { name, value, type, checked, files } = event.target;
@@ -135,31 +254,18 @@ function CreateEventForm({
     }));
   }
 
-  function validateForm() {
-    const newErrors = {};
-
-    requiredFields.forEach((field) => {
-      if (!formData[field].trim()) {
-        newErrors[field] = true;
-      }
-    });
-
-    if (!formData.unlimitedParticipants && !formData.maxParticipants.trim()) {
-      newErrors.maxParticipants = true;
-    }
-
-    if (!formData.noFee && !formData.fee.trim()) {
-      newErrors.fee = true;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  function handleBlur(field) {
+    setTouchedFields((current) => ({
+      ...current,
+      [field]: true,
+    }));
   }
 
   function handleSubmit(event) {
     event.preventDefault();
 
-    if (!validateForm()) return;
+    setHasSubmitted(true);
+    if (Object.keys(validationErrors).length > 0) return;
 
     setConfirmStep(mode === "edit" ? "edit-confirm" : "create-confirm");
   }
@@ -217,14 +323,25 @@ function CreateEventForm({
     onClose();
   }
 
+  function resetFormToDefaults() {
+    setFormData(buildFormData(initialData));
+    setTouchedFields({});
+    setHasSubmitted(false);
+    setConfirmStep("none");
+  }
+
   function getInputClass(field) {
-    return errors[field] ? "event-input event-input-error" : "event-input";
+    return `${field && shouldShowError(field) && validationErrors[field] ? "event-input event-input-error" : "event-input"}`;
+  }
+
+  function getFieldError(field) {
+    return shouldShowError(field) ? validationErrors[field] || "" : "";
   }
 
   return (
     <>
-      <div className="event-modal-overlay" onClick={onClose}>
-        <div className="event-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="event-modal-overlay">
+        <div className="event-modal">
           <div className="event-modal-header">
             <h2>{mode === "edit" ? "Edit Event" : "Add New Event"}</h2>
             <button
@@ -236,16 +353,18 @@ function CreateEventForm({
             </button>
           </div>
 
-          <form className="event-form" onSubmit={handleSubmit}>
+          <form className="event-form" onSubmit={handleSubmit} noValidate>
             <FormField
               label="Title"
               required
+              errorMessage={getFieldError("title")}
               input={
                 <input
                   className={getInputClass("title")}
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
+                  onBlur={() => handleBlur("title")}
                   placeholder="Enter event title"
                 />
               }
@@ -255,6 +374,7 @@ function CreateEventForm({
               <IconField
                 label="Date"
                 required
+                errorMessage={getFieldError("date")}
                 icon={
                   <CalendarBlankIcon size={20} className="event-field-icon" />
                 }
@@ -262,9 +382,11 @@ function CreateEventForm({
                   <input
                     className={getInputClass("date")}
                     name="date"
+                    type="date"
+                    min={isCreateMode ? todayDate : undefined}
                     value={formData.date}
                     onChange={handleChange}
-                    placeholder="(e.g. 12/25/2026)"
+                    onBlur={() => handleBlur("date")}
                   />
                 }
               />
@@ -272,14 +394,17 @@ function CreateEventForm({
               <IconField
                 label="Time"
                 required
+                errorMessage={getFieldError("time")}
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
                     className={getInputClass("time")}
                     name="time"
+                    type="time"
                     value={formData.time}
                     onChange={handleChange}
-                    placeholder="(e.g. 12:00pm)"
+                    step="60"
+                    onBlur={() => handleBlur("time")}
                   />
                 }
               />
@@ -288,6 +413,7 @@ function CreateEventForm({
             <FormField
               label="Type"
               required
+              errorMessage={getFieldError("type")}
               input={
                 <div className="select-wrapper">
                   <select
@@ -295,6 +421,7 @@ function CreateEventForm({
                     name="type"
                     value={formData.type}
                     onChange={handleChange}
+                    onBlur={() => handleBlur("type")}
                   >
                     <option value="">Select an option</option>
                     <option value="Workshop">Workshop</option>
@@ -310,6 +437,7 @@ function CreateEventForm({
             <FormField
               label="Location"
               icon={<MapPinIcon size={20} className="event-field-icon" />}
+              errorMessage={getFieldError("campusId")}
               input={
                 <div className="select-wrapper">
                   <select
@@ -317,6 +445,7 @@ function CreateEventForm({
                     name="campusId"
                     value={formData.campusId}
                     onChange={handleChange}
+                    onBlur={() => handleBlur("campusId")}
                   >
                     <option value="">Select a campus</option>
                     {campusOptions.map((campus) => {
@@ -344,6 +473,7 @@ function CreateEventForm({
               <IconField
                 label="Registration Starting Date"
                 required
+                errorMessage={getFieldError("registrationStartDate")}
                 icon={
                   <CalendarBlankIcon size={20} className="event-field-icon" />
                 }
@@ -351,9 +481,11 @@ function CreateEventForm({
                   <input
                     className={getInputClass("registrationStartDate")}
                     name="registrationStartDate"
+                    type="date"
+                    min={isCreateMode ? todayDate : undefined}
                     value={formData.registrationStartDate}
                     onChange={handleChange}
-                    placeholder="(e.g. 12/25/2026)"
+                    onBlur={() => handleBlur("registrationStartDate")}
                   />
                 }
               />
@@ -361,14 +493,17 @@ function CreateEventForm({
               <IconField
                 label="Registration Starting Time"
                 required
+                errorMessage={getFieldError("registrationStartTime")}
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
                     className={getInputClass("registrationStartTime")}
                     name="registrationStartTime"
+                    type="time"
                     value={formData.registrationStartTime}
                     onChange={handleChange}
-                    placeholder="(e.g. 12:00pm)"
+                    step="60"
+                    onBlur={() => handleBlur("registrationStartTime")}
                   />
                 }
               />
@@ -378,6 +513,7 @@ function CreateEventForm({
               <IconField
                 label="Registration Ending Date"
                 required
+                errorMessage={getFieldError("registrationEndDate")}
                 icon={
                   <CalendarBlankIcon size={20} className="event-field-icon" />
                 }
@@ -385,9 +521,11 @@ function CreateEventForm({
                   <input
                     className={getInputClass("registrationEndDate")}
                     name="registrationEndDate"
+                    type="date"
+                    min={isCreateMode ? todayDate : undefined}
                     value={formData.registrationEndDate}
                     onChange={handleChange}
-                    placeholder="(e.g. 12/25/2026)"
+                    onBlur={() => handleBlur("registrationEndDate")}
                   />
                 }
               />
@@ -395,14 +533,17 @@ function CreateEventForm({
               <IconField
                 label="Registration Ending Time"
                 required
+                errorMessage={getFieldError("registrationEndTime")}
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
                     className={getInputClass("registrationEndTime")}
                     name="registrationEndTime"
+                    type="time"
                     value={formData.registrationEndTime}
                     onChange={handleChange}
-                    placeholder="(e.g. 12:00pm)"
+                    step="60"
+                    onBlur={() => handleBlur("registrationEndTime")}
                   />
                 }
               />
@@ -411,15 +552,20 @@ function CreateEventForm({
             <IconField
               label="Maximum Participants"
               required={!formData.unlimitedParticipants}
+              errorMessage={getFieldError("maxParticipants")}
               icon={<UserIcon size={20} className="event-field-icon" />}
               input={
                 <input
                   className={getInputClass("maxParticipants")}
                   name="maxParticipants"
+                  type="number"
+                  min="1"
+                  step="1"
                   value={formData.maxParticipants}
                   onChange={handleChange}
                   placeholder="(e.g. 25)"
                   disabled={formData.unlimitedParticipants}
+                  onBlur={() => handleBlur("maxParticipants")}
                 />
               }
             />
@@ -434,6 +580,7 @@ function CreateEventForm({
             <FormField
               label="Description"
               required
+              errorMessage={getFieldError("description")}
               input={
                 <textarea
                   className={getInputClass("description")}
@@ -441,6 +588,7 @@ function CreateEventForm({
                   rows="6"
                   value={formData.description}
                   onChange={handleChange}
+                  onBlur={() => handleBlur("description")}
                   placeholder="Enter description"
                 />
               }
@@ -448,13 +596,16 @@ function CreateEventForm({
 
             <FormField
               label="URL"
+              errorMessage={getFieldError("url")}
               input={
                 <input
-                  className="event-input"
+                  className={getInputClass("url")}
                   name="url"
                   value={formData.url}
                   onChange={handleChange}
+                  type="url"
                   placeholder="URL"
+                  onBlur={() => handleBlur("url")}
                 />
               }
             />
@@ -462,14 +613,19 @@ function CreateEventForm({
             <FormField
               label="Fee"
               required={!formData.noFee}
+              errorMessage={getFieldError("fee")}
               input={
                 <input
                   className={getInputClass("fee")}
                   name="fee"
+                  type="number"
+                  min="0"
+                  step="0.01"
                   value={formData.fee}
                   onChange={handleChange}
                   placeholder="$ (e.g. 5)"
                   disabled={formData.noFee}
+                  onBlur={() => handleBlur("fee")}
                 />
               }
             />
@@ -484,6 +640,7 @@ function CreateEventForm({
             <FormField
               label="Event Image"
               required
+              errorMessage={getFieldError("eventImage")}
               input={
                 <label className="event-upload-box">
                   <input
@@ -507,9 +664,9 @@ function CreateEventForm({
               <button
                 type="button"
                 className="event-cancel-button"
-                onClick={onClose}
+                onClick={resetFormToDefaults}
               >
-                Cancel
+                Reset
               </button>
 
               <button type="submit" className="event-submit-button">
@@ -671,18 +828,19 @@ function CreateEventForm({
   );
 }
 
-function FormField({ label, required = false, input }) {
+function FormField({ label, required = false, input, errorMessage }) {
   return (
     <label className="event-field event-field-full">
       <span>
         {label} {required && <span className="required-mark">*</span>}
       </span>
       {input}
+      {errorMessage ? <p className="field-error-text">{errorMessage}</p> : null}
     </label>
   );
 }
 
-function IconField({ label, required = false, icon, input }) {
+function IconField({ label, required = false, icon, input, errorMessage }) {
   return (
     <label className="event-field">
       <span>
@@ -692,6 +850,7 @@ function IconField({ label, required = false, icon, input }) {
         {icon}
         {input}
       </div>
+      {errorMessage ? <p className="field-error-text">{errorMessage}</p> : null}
     </label>
   );
 }
