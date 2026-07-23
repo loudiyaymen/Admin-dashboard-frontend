@@ -3,7 +3,7 @@ import {
   PencilSimpleIcon,
   PlusCircleIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import AdminHeader from "../Components/AdminHeader";
 import CreateEventForm from "../Components/CreateEventForm";
@@ -36,28 +36,77 @@ function EventsPage({ headerProps }) {
   const [isDrawingWinner, setIsDrawingWinner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  async function loadEvents() {
-    setErrorMessage("");
-    try {
-      const [events, campuses] = await Promise.all([
-        fetchEvents(),
-        fetchCampuses(),
-      ]);
-      setUpcomingEvents(events);
-      setCampuses(campuses);
-      if (campuses.length > 0) {
-        setCampusId(campuses[0].campus_id);
+  const loadEvents = useCallback(
+    async ({ silent = false } = {}) => {
+      setErrorMessage("");
+      if (!silent) {
+        setIsLoading(true);
       }
-    } catch (error) {
-      setErrorMessage(error.message || "Failed to load events");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+
+      try {
+        const [events, campuses] = await Promise.all([
+          fetchEvents(),
+          fetchCampuses(),
+        ]);
+        setUpcomingEvents(events);
+        setCampuses(campuses);
+
+        setCampusId((currentCampusId) => {
+          if (campuses.length === 0) return "";
+
+          if (
+            currentCampusId &&
+            campuses.some((campus) => campus.campus_id === currentCampusId)
+          ) {
+            return currentCampusId;
+          }
+
+          const campusFromQuery = searchParams.get("campusId") || "";
+          if (
+            campusFromQuery &&
+            campuses.some((campus) => campus.campus_id === campusFromQuery)
+          ) {
+            return campusFromQuery;
+          }
+
+          return campuses[0].campus_id;
+        });
+      } catch (error) {
+        setErrorMessage(error.message || "Failed to load events");
+      } finally {
+        if (!silent) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [searchParams],
+  );
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [loadEvents]);
+
+  useEffect(() => {
+    function refreshOnFocus() {
+      loadEvents({ silent: true });
+    }
+
+    window.addEventListener("focus", refreshOnFocus);
+
+    return () => {
+      window.removeEventListener("focus", refreshOnFocus);
+    };
+  }, [loadEvents]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      loadEvents({ silent: true });
+    }, 10000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [loadEvents]);
 
   useEffect(() => {
     if (campusId) {

@@ -66,7 +66,7 @@ function EmergencyPage({ headerProps }) {
           <div className="standard-page-content">
             <div className="page-heading">
               <h1>Emergency Dashboard</h1>
-              <p>Monitor SOS calls from the mobile app.</p>
+              <p>Monitor reports sent from the mobile app.</p>
             </div>
 
             <section className="emergency-log-card">

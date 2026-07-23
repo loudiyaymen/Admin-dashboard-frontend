@@ -32,13 +32,18 @@ function toUiEvent(event) {
   const participants = Array.isArray(event.participants)
     ? event.participants.map((participant) => ({
         id:
-          participant.event_id && participant.device_id
-            ? `${participant.event_id}:${participant.device_id}`
-            : participant.device_id,
-        deviceId: participant.device_id || "",
-        name: participant.name || participant.device_id || "Guest",
+          (participant.event_id || participant.eventId) &&
+          (participant.device_id || participant.deviceId)
+            ? `${participant.event_id || participant.eventId}:${participant.device_id || participant.deviceId}`
+            : participant.device_id || participant.deviceId,
+        deviceId: participant.device_id || participant.deviceId || "",
+        name:
+          participant.name ||
+          participant.device_id ||
+          participant.deviceId ||
+          "Guest",
         email: participant.email || "",
-        joinedAt: participant.joined_at || null,
+        joinedAt: participant.joined_at || participant.joinedAt || null,
       }))
     : [];
 
