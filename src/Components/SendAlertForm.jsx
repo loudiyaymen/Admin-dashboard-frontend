@@ -158,6 +158,9 @@ function SendAlertForm({ onClose, onAlertSent }) {
     );
   }, [buildingOptions, buildingSearch]);
 
+  const selectedAlertConfig = alertTypeConfig[formData.alertTitle] || null;
+  const requiresBuilding = selectedAlertConfig?.requiresBuilding || false;
+
   const validationErrors = useMemo(() => {
     const errors = {};
     const normalizedBuilding = normalizeBuildingName(
@@ -174,7 +177,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
     if (requiresBuilding) {
       if (!isNonEmptyString(buildingSearch)) {
         errors.building = "Choose a building from the list.";
-      } else if (!matchedBuilding || matchedBuilding === "All Buildings") {
+      } else if (!matchedBuilding) {
         errors.building = "Select a building from the list.";
       }
     }
@@ -207,15 +210,13 @@ function SendAlertForm({ onClose, onAlertSent }) {
     }
 
     if (selectedAlert.requiresBuilding) {
-      const selectedBuilding = building || "the selected location";
+      const selectedBuilding =
+        building === "All Buildings" ? "all buildings" : building || "the selected location";
       return selectedAlert.buildMessage(selectedBuilding);
     }
 
     return selectedAlert.buildMessage();
   }
-
-  const selectedAlertConfig = alertTypeConfig[formData.alertTitle] || null;
-  const requiresBuilding = selectedAlertConfig?.requiresBuilding || false;
 
   function handleChange(event) {
     const { name, value } = event.target;
