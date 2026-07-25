@@ -211,7 +211,9 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
     if (selectedAlert.requiresBuilding) {
       const selectedBuilding =
-        building === "All Buildings" ? "all buildings" : building || "the selected location";
+        building === "All Buildings"
+          ? "all buildings"
+          : building || "the selected location";
       return selectedAlert.buildMessage(selectedBuilding);
     }
 
