@@ -196,14 +196,17 @@ function SendAlertPage({ headerProps }) {
                           type="button"
                           className="event-add-button"
                           onClick={() => handleMarkAsFixed(item)}
-                          disabled={Boolean(item.isResolved) || resolvingAlertId === item.id}
+                          disabled={
+                            Boolean(item.isResolved) ||
+                            resolvingAlertId === item.id
+                          }
                         >
                           <span>
                             {item.isResolved
                               ? "Resolved"
                               : resolvingAlertId === item.id
-                              ? "Sending update..."
-                              : "Mark as fixed"}
+                                ? "Sending update..."
+                                : "Mark as fixed"}
                           </span>
                         </button>
                       </div>
