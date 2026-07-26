@@ -3,7 +3,7 @@ import { PlusCircleIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
 import SendAlertForm from "../Components/SendAlertForm";
-import { fetchAlerts } from "../services/alertsservice";
+import { fetchAlerts, resolveAlert } from "../services/alertsservice";
 import { fetchAlertMetrics } from "../services/analyticsService";
 
 const MOCK_ALERT_METRICS = {
@@ -21,6 +21,31 @@ function SendAlertPage({ headerProps }) {
   const [alertMetrics, setAlertMetrics] = useState(MOCK_ALERT_METRICS);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [resolveMessage, setResolveMessage] = useState("");
+  const [resolvingAlertId, setResolvingAlertId] = useState("");
+
+  async function handleMarkAsFixed(notification) {
+    setResolveMessage("");
+    setErrorMessage("");
+
+    if (notification?.isResolved) {
+      setResolveMessage(`${notification.title} is already resolved.`);
+      return;
+    }
+
+    setResolvingAlertId(notification.id);
+
+    try {
+      await resolveAlert(notification.id);
+
+      setResolveMessage(`Sent resolution update for ${notification.title}.`);
+      await loadAlerts();
+    } catch (error) {
+      setErrorMessage(error.message || "Failed to send resolution alert");
+    } finally {
+      setResolvingAlertId("");
+    }
+  }
 
   async function loadAlerts() {
     setErrorMessage("");
@@ -146,6 +171,9 @@ function SendAlertPage({ headerProps }) {
                 {errorMessage ? (
                   <p className="app-message-error">{errorMessage}</p>
                 ) : null}
+                {resolveMessage ? (
+                  <p className="app-message-success">{resolveMessage}</p>
+                ) : null}
                 {visibleNotifications.length === 0 ? (
                   <p>No notifications found.</p>
                 ) : (
@@ -162,6 +190,23 @@ function SendAlertPage({ headerProps }) {
                       </div>
 
                       <p className="notification-type">{item.type}</p>
+
+                      <div style={{ marginTop: 12 }}>
+                        <button
+                          type="button"
+                          className="event-add-button"
+                          onClick={() => handleMarkAsFixed(item)}
+                          disabled={Boolean(item.isResolved) || resolvingAlertId === item.id}
+                        >
+                          <span>
+                            {item.isResolved
+                              ? "Resolved"
+                              : resolvingAlertId === item.id
+                              ? "Sending update..."
+                              : "Mark as fixed"}
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}

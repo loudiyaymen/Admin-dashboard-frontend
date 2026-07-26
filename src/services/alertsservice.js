@@ -15,6 +15,12 @@ export function mapAlertToNotification(alert) {
     sentAt: formatDateTime(alert.created_at || alert.starts_at),
     recipients: "All",
     type: "Push Notification",
+    alertType: alert.alert_type || null,
+    campusId: alert.campus_id || null,
+    buildingId: alert.building_id || null,
+    severity: alert.severity || null,
+    isResolved: Boolean(alert.is_resolved),
+    resolvedAt: alert.resolved_at || null,
   };
 }
 
@@ -28,5 +34,11 @@ export async function sendAlert(data) {
   return apiRequest("/alerts/create", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+}
+
+export async function resolveAlert(alertId) {
+  return apiRequest(`/alerts/${alertId}/resolve`, {
+    method: "POST",
   });
 }
