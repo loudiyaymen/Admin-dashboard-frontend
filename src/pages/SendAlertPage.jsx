@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { PlusCircleIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import AdminHeader from "../Components/AdminHeader";
+import EmptyState from "../Components/EmptyState";
+import PageErrorState from "../Components/PageErrorState";
 import Sidebar from "../Components/Sidebar";
 import SendAlertForm from "../Components/SendAlertForm";
 import { fetchAlerts, resolveAlert } from "../services/alertsservice";
@@ -111,133 +113,151 @@ function SendAlertPage({ headerProps }) {
         <Sidebar />
 
         <main className="admin-content">
-          <div className="standard-page-content">
-            <div className="communications-header">
-              <div className="page-heading">
-                <h1>Communications</h1>
-                <p>Push notification, alerts and notification history.</p>
-              </div>
-
-              <button
-                type="button"
-                className="create-alert-button"
-                onClick={() => setShowCreateForm(true)}
-              >
-                <PlusCircleIcon size={20} />
-                <span>Create alert</span>
-              </button>
+          {errorMessage && notifications.length === 0 ? (
+            <div className="standard-page-content">
+              <PageErrorState description={errorMessage} onRetry={loadAlerts} />
             </div>
-
-            <div className="communication-stats">
-              <section className="analytics-card">
-                <h3>Total Sent</h3>
-                <h2>{alertMetrics.totalSent}</h2>
-                <p>
-                  {alertMetrics.trend >= 0 ? "+" : ""}
-                  {alertMetrics.trend} this week
-                </p>
-              </section>
-
-              <section className="analytics-card">
-                <h3>Open Rate</h3>
-                <h2>{alertMetrics.openRate}%</h2>
-                <p>Average</p>
-              </section>
-
-              <section className="analytics-card">
-                <h3>Critical Alerts</h3>
-                <h2>{alertMetrics.criticalAlerts}</h2>
-                <p>Last 30 days</p>
-              </section>
-            </div>
-
-            <section className="panel-card">
-              <h2 className="panel-title">Notification History</h2>
-
-              <div className="notification-search-wrap">
-                <div className="search-input-wrapper notification-search">
-                  <MagnifyingGlassIcon size={20} className="search-icon" />
-                  <input
-                    type="search"
-                    placeholder="Search notifications"
-                    value={searchText}
-                    onChange={handleSearchChange}
-                  />
+          ) : (
+            <div className="standard-page-content">
+              <div className="communications-header">
+                <div className="page-heading">
+                  <h1>Communications</h1>
+                  <p>Push notification, alerts and notification history.</p>
                 </div>
-              </div>
-
-              <div className="notification-history-list">
-                {isLoading ? <p>Loading notifications...</p> : null}
-                {errorMessage ? (
-                  <p className="app-message-error">{errorMessage}</p>
-                ) : null}
-                {resolveMessage ? (
-                  <p className="app-message-success">{resolveMessage}</p>
-                ) : null}
-                {visibleNotifications.length === 0 ? (
-                  <p>No notifications found.</p>
-                ) : (
-                  visibleNotifications.map((item) => (
-                    <div key={item.id} className="notification-card">
-                      <h3>{item.title}</h3>
-                      <p className="notification-description">
-                        {item.description}
-                      </p>
-
-                      <div className="notification-meta">
-                        <span>Sent: {item.sentAt}</span>
-                        <span>Recipients: {item.recipients}</span>
-                      </div>
-
-                      <p className="notification-type">{item.type}</p>
-
-                      <div style={{ marginTop: 12 }}>
-                        <button
-                          type="button"
-                          className="event-add-button"
-                          onClick={() => handleMarkAsFixed(item)}
-                          disabled={
-                            Boolean(item.isResolved) ||
-                            resolvingAlertId === item.id
-                          }
-                        >
-                          <span>
-                            {item.isResolved
-                              ? "Resolved"
-                              : resolvingAlertId === item.id
-                                ? "Sending update..."
-                                : "Mark as fixed"}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="pagination">
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
 
                 <button
                   type="button"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  className="create-alert-button"
+                  onClick={() => setShowCreateForm(true)}
                 >
-                  Next
+                  <PlusCircleIcon size={20} />
+                  <span>Create alert</span>
                 </button>
               </div>
-            </section>
-          </div>
+
+              <div className="communication-stats">
+                <section className="analytics-card">
+                  <h3>Total Sent</h3>
+                  <h2>{alertMetrics.totalSent}</h2>
+                  <p>
+                    {alertMetrics.trend >= 0 ? "+" : ""}
+                    {alertMetrics.trend} this week
+                  </p>
+                </section>
+
+                <section className="analytics-card">
+                  <h3>Open Rate</h3>
+                  <h2>{alertMetrics.openRate}%</h2>
+                  <p>Average</p>
+                </section>
+
+                <section className="analytics-card">
+                  <h3>Critical Alerts</h3>
+                  <h2>{alertMetrics.criticalAlerts}</h2>
+                  <p>Last 30 days</p>
+                </section>
+              </div>
+
+              <section className="panel-card">
+                <h2 className="panel-title">Notification History</h2>
+
+                <div className="notification-search-wrap">
+                  <div className="search-input-wrapper notification-search">
+                    <MagnifyingGlassIcon size={20} className="search-icon" />
+                    <input
+                      type="search"
+                      placeholder="Search notifications"
+                      value={searchText}
+                      onChange={handleSearchChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="notification-history-list">
+                  {isLoading ? <p>Loading notifications...</p> : null}
+                  {errorMessage ? (
+                    <p className="app-message-error">{errorMessage}</p>
+                  ) : null}
+                  {resolveMessage ? (
+                    <p className="app-message-success">{resolveMessage}</p>
+                  ) : null}
+                  {!isLoading && visibleNotifications.length === 0 ? (
+                    <EmptyState
+                      compact
+                      title={
+                        searchText.trim()
+                          ? "No matching notifications"
+                          : "No notifications to show yet"
+                      }
+                      description={
+                        searchText.trim()
+                          ? "Try a different search term or clear the filter."
+                          : "Resolved and sent alerts will appear here."
+                      }
+                    />
+                  ) : (
+                    visibleNotifications.map((item) => (
+                      <div key={item.id} className="notification-card">
+                        <h3>{item.title}</h3>
+                        <p className="notification-description">
+                          {item.description}
+                        </p>
+
+                        <div className="notification-meta">
+                          <span>Sent: {item.sentAt}</span>
+                          <span>Recipients: {item.recipients}</span>
+                        </div>
+
+                        <p className="notification-type">{item.type}</p>
+
+                        <div style={{ marginTop: 12 }}>
+                          <button
+                            type="button"
+                            className="event-add-button"
+                            onClick={() => handleMarkAsFixed(item)}
+                            disabled={
+                              Boolean(item.isResolved) ||
+                              resolvingAlertId === item.id
+                            }
+                          >
+                            <span>
+                              {item.isResolved
+                                ? "Resolved"
+                                : resolvingAlertId === item.id
+                                  ? "Sending update..."
+                                  : "Mark as fixed"}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="pagination">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+
+                  <span>
+                    Page {currentPage} of {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
         </main>
       </div>
 

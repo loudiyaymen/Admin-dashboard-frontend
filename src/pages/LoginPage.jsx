@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { isNonEmptyString } from "../utils/formValidation";
 import "./LoginPage.css";
 
-function LoginPage({ onLogin, isLoading, errorMessage }) {
+function LoginPage({ onLogin, isLoading, errorMessage, successMessage }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [touchedFields, setTouchedFields] = useState({});
@@ -109,6 +109,9 @@ function LoginPage({ onLogin, isLoading, errorMessage }) {
             </div>
 
             {errorMessage && <p className="login-error">{errorMessage}</p>}
+            {successMessage ? (
+              <p className="login-success">{successMessage}</p>
+            ) : null}
 
             <button
               type="submit"

@@ -21,6 +21,9 @@ import {
   isValidUrl,
 } from "../utils/formValidation";
 
+const TITLE_MAX_LENGTH = 100;
+const DESCRIPTION_MAX_LENGTH = 250;
+
 function formatLocalDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -131,53 +134,55 @@ function CreateEventForm({
     const selectedCampusId = campusOptions.some(
       (campus) => campus.campusId === formData.campusId,
     );
+    const titleText = formData.title.trim();
+    const descriptionText = formData.description.trim();
 
-    if (!isNonEmptyString(formData.title)) {
-      errors.title = "Enter an event title.";
+    if (!isNonEmptyString(titleText) || titleText.length > TITLE_MAX_LENGTH) {
+      errors.title = "Enter event title. Max 100 characters";
     }
 
     if (!isValidDateInput(formData.date)) {
-      errors.date = "Choose a valid event date.";
+      errors.date = "Pick a date";
     } else if (isCreateMode && !isDateOnOrAfterToday(formData.date)) {
-      errors.date = "Choose today or a later event date.";
+      errors.date = "Pick a date";
     }
 
     if (!isValidTimeInput(formData.time)) {
-      errors.time = "Choose a valid event time.";
+      errors.time = "Pick a time";
     }
 
     if (!isNonEmptyString(formData.type)) {
-      errors.type = "Choose an event type.";
+      errors.type = "Select an option";
     }
 
     if (!selectedCampusId) {
-      errors.campusId = "Choose a campus from the list.";
+      errors.campusId = "Enter a valid location (Building, Room)";
     }
 
     if (!isValidDateInput(formData.registrationStartDate)) {
-      errors.registrationStartDate = "Choose a valid start date.";
+      errors.registrationStartDate = "Pick a starting date";
     } else if (
       isCreateMode &&
       !isDateOnOrAfterToday(formData.registrationStartDate)
     ) {
-      errors.registrationStartDate = "Choose today or a later start date.";
+      errors.registrationStartDate = "Pick a starting date";
     }
 
     if (!isValidTimeInput(formData.registrationStartTime)) {
-      errors.registrationStartTime = "Choose a valid start time.";
+      errors.registrationStartTime = "Pick a starting time";
     }
 
     if (!isValidDateInput(formData.registrationEndDate)) {
-      errors.registrationEndDate = "Choose a valid end date.";
+      errors.registrationEndDate = "Pick an ending date";
     } else if (
       isCreateMode &&
       !isDateOnOrAfterToday(formData.registrationEndDate)
     ) {
-      errors.registrationEndDate = "Choose today or a later end date.";
+      errors.registrationEndDate = "Pick an ending date";
     }
 
     if (!isValidTimeInput(formData.registrationEndTime)) {
-      errors.registrationEndTime = "Choose a valid end time.";
+      errors.registrationEndTime = "Pick an ending time";
     }
 
     const registrationStart = combineDateAndTime(
@@ -194,28 +199,33 @@ function CreateEventForm({
       registrationEnd &&
       registrationEnd < registrationStart
     ) {
-      errors.registrationEndDate =
-        "Ending registration must be after the starting date and time.";
-      errors.registrationEndTime =
-        "Ending registration must be after the starting date and time.";
+      errors.registrationEndDate = "Pick an ending date";
+      errors.registrationEndTime = "Pick an ending time";
     }
 
     if (!formData.unlimitedParticipants) {
       if (!isPositiveIntegerString(formData.maxParticipants)) {
-        errors.maxParticipants = "Enter a whole number greater than 0.";
+        errors.maxParticipants = "Exceeded the number of maximum participants";
       }
     }
 
-    if (!isNonEmptyString(formData.description)) {
-      errors.description = "Enter a description.";
+    if (
+      !isNonEmptyString(descriptionText) ||
+      descriptionText.length > DESCRIPTION_MAX_LENGTH
+    ) {
+      errors.description = "Enter a description. Max 250 characters";
     }
 
     if (!isValidUrl(formData.url)) {
-      errors.url = "Enter a valid URL.";
+      errors.url = "Enter a valid URL";
     }
 
     if (!formData.noFee && !isNonNegativeNumberString(formData.fee)) {
-      errors.fee = "Enter a valid fee amount.";
+      errors.fee = "Enter a valid fee";
+    }
+
+    if (!formData.eventImage) {
+      errors.eventImage = "Could not upload media";
     }
 
     return errors;
@@ -331,7 +341,11 @@ function CreateEventForm({
   }
 
   function getInputClass(field) {
-    return `${field && shouldShowError(field) && validationErrors[field] ? "event-input event-input-error" : "event-input"}`;
+    return `${
+      field && shouldShowError(field) && validationErrors[field]
+        ? "event-input event-input-error"
+        : "event-input"
+    }`;
   }
 
   function getFieldError(field) {
@@ -365,7 +379,8 @@ function CreateEventForm({
                   value={formData.title}
                   onChange={handleChange}
                   onBlur={() => handleBlur("title")}
-                  placeholder="Enter event title"
+                  placeholder="Enter event title (e.g. Workshop: Let's Eat Tacos!)"
+                  maxLength={TITLE_MAX_LENGTH}
                 />
               }
             />
@@ -380,7 +395,7 @@ function CreateEventForm({
                 }
                 input={
                   <input
-                    className={getInputClass("date")}
+                    className={`${getInputClass("date")} event-native-picker-clean`}
                     name="date"
                     type="date"
                     min={isCreateMode ? todayDate : undefined}
@@ -398,7 +413,7 @@ function CreateEventForm({
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
-                    className={getInputClass("time")}
+                    className={`${getInputClass("time")} event-native-picker-clean`}
                     name="time"
                     type="time"
                     value={formData.time}
@@ -479,7 +494,7 @@ function CreateEventForm({
                 }
                 input={
                   <input
-                    className={getInputClass("registrationStartDate")}
+                    className={`${getInputClass("registrationStartDate")} event-native-picker-clean`}
                     name="registrationStartDate"
                     type="date"
                     min={isCreateMode ? todayDate : undefined}
@@ -497,7 +512,7 @@ function CreateEventForm({
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
-                    className={getInputClass("registrationStartTime")}
+                    className={`${getInputClass("registrationStartTime")} event-native-picker-clean`}
                     name="registrationStartTime"
                     type="time"
                     value={formData.registrationStartTime}
@@ -519,7 +534,7 @@ function CreateEventForm({
                 }
                 input={
                   <input
-                    className={getInputClass("registrationEndDate")}
+                    className={`${getInputClass("registrationEndDate")} event-native-picker-clean`}
                     name="registrationEndDate"
                     type="date"
                     min={isCreateMode ? todayDate : undefined}
@@ -537,7 +552,7 @@ function CreateEventForm({
                 icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
-                    className={getInputClass("registrationEndTime")}
+                    className={`${getInputClass("registrationEndTime")} event-native-picker-clean`}
                     name="registrationEndTime"
                     type="time"
                     value={formData.registrationEndTime}
@@ -589,7 +604,8 @@ function CreateEventForm({
                   value={formData.description}
                   onChange={handleChange}
                   onBlur={() => handleBlur("description")}
-                  placeholder="Enter description"
+                  placeholder="(e.g. Are you tired of stiff suits and awkward business card exchanges? The Connection Lab is stripping away the formality to focus on what actually matters: genuine conversation and great food.)"
+                  maxLength={DESCRIPTION_MAX_LENGTH}
                 />
               }
             />
@@ -642,7 +658,13 @@ function CreateEventForm({
               required
               errorMessage={getFieldError("eventImage")}
               input={
-                <label className="event-upload-box">
+                <label
+                  className={`event-upload-box ${
+                    shouldShowError("eventImage") && validationErrors.eventImage
+                      ? "event-upload-box-error"
+                      : ""
+                  }`}
+                >
                   <input
                     type="file"
                     name="eventImage"

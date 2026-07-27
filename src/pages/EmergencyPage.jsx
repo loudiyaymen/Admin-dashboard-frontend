@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminHeader from "../Components/AdminHeader";
+import EmptyState from "../Components/EmptyState";
+import PageErrorState from "../Components/PageErrorState";
 import Sidebar from "../Components/Sidebar";
 import { fetchSosEvents } from "../services/sosService";
 import { API_BASE_URL } from "../services/apiClient";
@@ -63,53 +65,74 @@ function EmergencyPage({ headerProps }) {
         <Sidebar />
 
         <main className="admin-content">
-          <div className="standard-page-content">
-            <div className="page-heading">
-              <h1>Emergency Dashboard</h1>
-              <p>Monitor reports sent from the mobile app.</p>
+          {errorMessage && reports.length === 0 ? (
+            <div className="standard-page-content">
+              <PageErrorState
+                description={errorMessage}
+                onRetry={loadSosEvents}
+              />
             </div>
+          ) : (
+            <div className="standard-page-content">
+              <div className="page-heading">
+                <h1>Emergency Dashboard</h1>
+                <p>Monitor reports sent from the mobile app.</p>
+              </div>
 
-            <section className="emergency-log-card">
-              <h2>Emergency Report Log</h2>
+              <section className="emergency-log-card">
+                <h2>Emergency Report Log</h2>
 
-              <table className="emergency-log-table">
-                <thead>
-                  <tr className="emergency-log-header">
-                    <th>ID</th>
-                    <th>Time</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td className="emergency-log-status" colSpan={2}>
-                        Loading SOS events...
-                      </td>
+                <table className="emergency-log-table">
+                  <thead>
+                    <tr className="emergency-log-header">
+                      <th>ID</th>
+                      <th>Time</th>
                     </tr>
-                  ) : null}
+                  </thead>
 
-                  {errorMessage ? (
-                    <tr>
-                      <td
-                        className="emergency-log-status app-message-error"
-                        colSpan={2}
-                      >
-                        {errorMessage}
-                      </td>
-                    </tr>
-                  ) : null}
+                  <tbody>
+                    {isLoading ? (
+                      <tr>
+                        <td className="emergency-log-status" colSpan={2}>
+                          Loading SOS events...
+                        </td>
+                      </tr>
+                    ) : null}
 
-                  {reports.map((report) => (
-                    <tr key={report.id} className="emergency-log-row">
-                      <td>{report.id}</td>
-                      <td>{report.time}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-          </div>
+                    {!isLoading && !errorMessage && reports.length === 0 ? (
+                      <tr>
+                        <td colSpan={2}>
+                          <EmptyState
+                            compact
+                            title="No emergency reports yet"
+                            description="SOS activity and emergency reports from the mobile app will appear here."
+                          />
+                        </td>
+                      </tr>
+                    ) : null}
+
+                    {errorMessage ? (
+                      <tr>
+                        <td
+                          className="emergency-log-status app-message-error"
+                          colSpan={2}
+                        >
+                          {errorMessage}
+                        </td>
+                      </tr>
+                    ) : null}
+
+                    {reports.map((report) => (
+                      <tr key={report.id} className="emergency-log-row">
+                        <td>{report.id}</td>
+                        <td>{report.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            </div>
+          )}
         </main>
       </div>
     </div>

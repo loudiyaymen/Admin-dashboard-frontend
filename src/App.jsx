@@ -21,6 +21,7 @@ function App() {
   const [adminUsername, setAdminUsername] = useState("Admin user");
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [authSuccess, setAuthSuccess] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(hasAdminToken());
 
   const headerProps = useMemo(
@@ -30,6 +31,7 @@ function App() {
         await logoutAdmin();
         setIsAuthenticated(false);
         setAdminUsername("Admin user");
+        setAuthSuccess("Logout successful.");
       },
     }),
     [adminUsername],
@@ -57,6 +59,7 @@ function App() {
 
   async function handleLogin(credentials) {
     setAuthError("");
+    setAuthSuccess("");
     setAuthLoading(true);
     try {
       const result = await loginAdmin(credentials);
@@ -79,6 +82,7 @@ function App() {
               onLogin={handleLogin}
               isLoading={authLoading}
               errorMessage={authError}
+              successMessage={authSuccess}
             />
           }
         />

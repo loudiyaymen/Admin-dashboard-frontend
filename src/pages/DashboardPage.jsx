@@ -16,6 +16,8 @@ import {
   YAxis,
 } from "recharts";
 import AdminHeader from "../Components/AdminHeader";
+import EmptyState from "../Components/EmptyState";
+import PageErrorState from "../Components/PageErrorState";
 import Sidebar from "../Components/Sidebar";
 import {
   fetchDashboardMetrics,
@@ -69,6 +71,7 @@ function DashboardPage({ headerProps }) {
   const [activeUsersTrendData, setActiveUsersTrendData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showEmptyState, setShowEmptyState] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -84,27 +87,41 @@ function DashboardPage({ headerProps }) {
         if (!mounted) return;
 
         const fetchedMetrics = metricsData?.data || {};
+        const hasDashboardData =
+          Object.keys(fetchedMetrics).length > 0 ||
+          (activityData?.data?.length || 0) > 0 ||
+          (usersData?.data?.length || 0) > 0;
+
+        setShowEmptyState(!hasDashboardData);
+
+        if (!hasDashboardData) {
+          setMetrics(null);
+          setActivityOverviewData([]);
+          setActiveUsersTrendData([]);
+          return;
+        }
+
         const metricsToUse = {
           recentNotifications:
-            fetchedMetrics.recentNotifications ||
+            fetchedMetrics.recentNotifications ??
             MOCK_METRICS.recentNotifications,
           notificationTrend:
             fetchedMetrics.notificationTrend ?? MOCK_METRICS.notificationTrend,
           reportsSubmitted:
-            fetchedMetrics.reportsSubmitted || MOCK_METRICS.reportsSubmitted,
+            fetchedMetrics.reportsSubmitted ?? MOCK_METRICS.reportsSubmitted,
           reportTrend: fetchedMetrics.reportTrend ?? MOCK_METRICS.reportTrend,
           emergencyResponses:
-            fetchedMetrics.emergencyResponses ||
+            fetchedMetrics.emergencyResponses ??
             MOCK_METRICS.emergencyResponses,
           emergencyTrend:
             fetchedMetrics.emergencyTrend ?? MOCK_METRICS.emergencyTrend,
-          activeUsers: fetchedMetrics.activeUsers || MOCK_METRICS.activeUsers,
-          totalUsers: fetchedMetrics.totalUsers || MOCK_METRICS.totalUsers,
-          openReports: fetchedMetrics.openReports || MOCK_METRICS.openReports,
+          activeUsers: fetchedMetrics.activeUsers ?? MOCK_METRICS.activeUsers,
+          totalUsers: fetchedMetrics.totalUsers ?? MOCK_METRICS.totalUsers,
+          openReports: fetchedMetrics.openReports ?? MOCK_METRICS.openReports,
           resolvedReports:
-            fetchedMetrics.resolvedReports || MOCK_METRICS.resolvedReports,
+            fetchedMetrics.resolvedReports ?? MOCK_METRICS.resolvedReports,
           pendingReports:
-            fetchedMetrics.pendingReports || MOCK_METRICS.pendingReports,
+            fetchedMetrics.pendingReports ?? MOCK_METRICS.pendingReports,
           userEngagementRate:
             fetchedMetrics.userEngagementRate ??
             MOCK_METRICS.userEngagementRate,
@@ -121,6 +138,7 @@ function DashboardPage({ headerProps }) {
             ? usersData.data
             : MOCK_ACTIVE_USERS_TREND,
         );
+        setShowEmptyState(false);
       } catch (error) {
         if (!mounted) return;
         setErrorMessage(error.message || "Failed to load dashboard data");
@@ -188,11 +206,19 @@ function DashboardPage({ headerProps }) {
               <p>Welcome to the Algonquin GO admin portal.</p>
             </div>
 
-            {errorMessage && (
-              <div className="app-message-error">{errorMessage}</div>
-            )}
-
-            {isLoading ? (
+            {errorMessage ? (
+              <PageErrorState
+                title="Oops! Something went wrong"
+                description={errorMessage}
+                onRetry={() => window.location.reload()}
+              />
+            ) : showEmptyState ? (
+              <EmptyState
+                className="dashboard-empty-state"
+                title="No dashboard data yet"
+                description="Metrics and trend charts will appear here once the backend has data to show."
+              />
+            ) : isLoading ? (
               <div className="loading-message">Loading dashboard data...</div>
             ) : (
               <>

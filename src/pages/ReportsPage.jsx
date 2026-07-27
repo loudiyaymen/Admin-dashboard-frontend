@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AdminHeader from "../Components/AdminHeader";
+import EmptyState from "../Components/EmptyState";
+import PageErrorState from "../Components/PageErrorState";
 import Sidebar from "../Components/Sidebar";
 import ReportInbox from "../Components/ReportInbox";
 import ReportsAnalytics from "../Components/ReportsAnalytics";
@@ -140,7 +142,14 @@ function ReportsPage({ headerProps }) {
         <Sidebar />
 
         <main className="admin-content">
-          {selectedReport ? (
+          {errorMessage && reports.length === 0 ? (
+            <div className="standard-page-content">
+              <PageErrorState
+                description={errorMessage}
+                onRetry={() => window.location.reload()}
+              />
+            </div>
+          ) : selectedReport ? (
             <ReportDetailsModal
               report={selectedReport}
               onBack={handleBackToReports}
@@ -166,6 +175,16 @@ function ReportsPage({ headerProps }) {
                   <ReportInbox
                     reports={filteredReports}
                     onSelectReport={handleSelectReport}
+                    emptyTitle={
+                      searchText.trim()
+                        ? "No matching reports found"
+                        : "No reports to show yet"
+                    }
+                    emptyDescription={
+                      searchText.trim()
+                        ? "Try a different title or report ID."
+                        : "Reports submitted through the mobile app will appear here."
+                    }
                   />
                 </section>
 

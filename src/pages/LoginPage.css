@@ -140,6 +140,16 @@
   border-left: 4px solid #d32f2f;
 }
 
+.login-success {
+  color: #166534;
+  font-size: 14px;
+  margin: 0;
+  padding: 10px;
+  background-color: rgba(22, 101, 52, 0.1);
+  border-radius: 6px;
+  border-left: 4px solid #166534;
+}
+
 .sign-in-button {
   height: 48px;
   background: linear-gradient(135deg, #1b5c3a 0%, #2d8556 100%);
