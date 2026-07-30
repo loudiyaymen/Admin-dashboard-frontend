@@ -1,11 +1,11 @@
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import { SealWarningIcon } from "@phosphor-icons/react";
 
 function EmptyState({
   title,
   description,
   actionLabel,
   onAction,
-  icon: Icon = WarningCircleIcon,
+  icon: Icon = SealWarningIcon,
   compact = false,
   className = "",
 }) {

@@ -200,6 +200,7 @@
   align-items: flex-start;
   gap: 12px;
   text-align: left;
+  cursor: pointer;
 }
 
 .report-details-view {
@@ -416,6 +417,13 @@
   font-size: var(--text-md);
   line-height: 1.4;
   color: var(--color-text-deep-slate);
+}
+
+.report-submission-date {
+  margin: 0 0 6px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: #4b5563;
 }
 
 .report-row-left span {

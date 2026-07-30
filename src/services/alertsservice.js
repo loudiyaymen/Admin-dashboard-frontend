@@ -8,6 +8,13 @@ function formatDateTime(value) {
 }
 
 export function mapAlertToNotification(alert) {
+  const normalizedType = String(alert.alert_type || "")
+    .trim()
+    .toLowerCase();
+  const isResolutionUpdate =
+    Boolean(alert.is_resolution_update) ||
+    normalizedType.endsWith("- resolved");
+
   return {
     id: alert.alert_id,
     title: alert.alert_type || "General Alert",
@@ -21,6 +28,7 @@ export function mapAlertToNotification(alert) {
     severity: alert.severity || null,
     isResolved: Boolean(alert.is_resolved),
     resolvedAt: alert.resolved_at || null,
+    isResolutionUpdate,
   };
 }
 

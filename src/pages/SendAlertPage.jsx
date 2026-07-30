@@ -30,6 +30,11 @@ function SendAlertPage({ headerProps }) {
     setResolveMessage("");
     setErrorMessage("");
 
+    if (notification?.isResolutionUpdate) {
+      setResolveMessage("Resolution update alerts cannot be marked as fixed.");
+      return;
+    }
+
     if (notification?.isResolved) {
       setResolveMessage(`${notification.title} is already resolved.`);
       return;
@@ -210,25 +215,27 @@ function SendAlertPage({ headerProps }) {
 
                         <p className="notification-type">{item.type}</p>
 
-                        <div style={{ marginTop: 12 }}>
-                          <button
-                            type="button"
-                            className="event-add-button"
-                            onClick={() => handleMarkAsFixed(item)}
-                            disabled={
-                              Boolean(item.isResolved) ||
-                              resolvingAlertId === item.id
-                            }
-                          >
-                            <span>
-                              {item.isResolved
-                                ? "Resolved"
-                                : resolvingAlertId === item.id
-                                  ? "Sending update..."
-                                  : "Mark as fixed"}
-                            </span>
-                          </button>
-                        </div>
+                        {!item.isResolutionUpdate ? (
+                          <div style={{ marginTop: 12 }}>
+                            <button
+                              type="button"
+                              className="event-add-button"
+                              onClick={() => handleMarkAsFixed(item)}
+                              disabled={
+                                Boolean(item.isResolved) ||
+                                resolvingAlertId === item.id
+                              }
+                            >
+                              <span>
+                                {item.isResolved
+                                  ? "Resolved"
+                                  : resolvingAlertId === item.id
+                                    ? "Sending update..."
+                                    : "Mark as fixed"}
+                              </span>
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     ))
                   )}

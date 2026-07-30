@@ -11,6 +11,9 @@ function ReportRow({ report, onSelect }) {
       <div className="report-row-left">
         <h3>{report.title}</h3>
         <p>{report.location}</p>
+        <p className="report-submission-date">
+          Submitted: {report.submissionDateTime}
+        </p>
         <span>{report.reportId}</span>
       </div>
 
