@@ -619,7 +619,7 @@
 }
 
 .trend-positive {
-  color: #2f9b35;
+  color: #2d8c13;
   font-size: 14px;
   font-weight: 600;
 }
@@ -708,7 +708,7 @@
 }
 
 .dashboard-card-header p {
-  color: #6c7278;
+  color: var(--color-text-secondary);
 }
 
 .system-status-list {

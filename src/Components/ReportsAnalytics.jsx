@@ -161,13 +161,13 @@ function ReportsAnalytics({
                 <CartesianGrid stroke="#d7d7d7" strokeDasharray="4 4" />
                 <XAxis
                   dataKey="month"
-                  tick={{ fill: "#6c7278", fontSize: 10 }}
+                  tick={{ fill: "var(--color-text-secondary)", fontSize: 10 }}
                   axisLine={{ stroke: "#7d7d7d" }}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[0, 100]}
-                  tick={{ fill: "#6c7278", fontSize: 10 }}
+                  tick={{ fill: "var(--color-text-secondary)", fontSize: 10 }}
                   axisLine={{ stroke: "#7d7d7d" }}
                   tickLine={false}
                   width={36}

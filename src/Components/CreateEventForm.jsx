@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   XIcon,
-  CalendarBlankIcon,
-  ClockIcon,
   MapPinIcon,
   UserIcon,
   CheckIcon,
@@ -352,6 +350,12 @@ function CreateEventForm({
     return shouldShowError(field) ? validationErrors[field] || "" : "";
   }
 
+  function handleNativePickerClick(event) {
+    if (typeof event.currentTarget.showPicker === "function") {
+      event.currentTarget.showPicker();
+    }
+  }
+
   return (
     <>
       <div className="event-modal-overlay">
@@ -386,13 +390,10 @@ function CreateEventForm({
             />
 
             <div className="event-grid">
-              <IconField
+              <FormField
                 label="Date"
                 required
                 errorMessage={getFieldError("date")}
-                icon={
-                  <CalendarBlankIcon size={20} className="event-field-icon" />
-                }
                 input={
                   <input
                     className={`${getInputClass("date")} event-native-picker-clean`}
@@ -400,23 +401,24 @@ function CreateEventForm({
                     type="date"
                     min={isCreateMode ? todayDate : undefined}
                     value={formData.date}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
                     onBlur={() => handleBlur("date")}
                   />
                 }
               />
 
-              <IconField
+              <FormField
                 label="Time"
                 required
                 errorMessage={getFieldError("time")}
-                icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
                     className={`${getInputClass("time")} event-native-picker-clean`}
                     name="time"
                     type="time"
                     value={formData.time}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
                     step="60"
                     onBlur={() => handleBlur("time")}
@@ -485,13 +487,10 @@ function CreateEventForm({
             />
 
             <div className="event-grid">
-              <IconField
+              <FormField
                 label="Registration Starting Date"
                 required
                 errorMessage={getFieldError("registrationStartDate")}
-                icon={
-                  <CalendarBlankIcon size={20} className="event-field-icon" />
-                }
                 input={
                   <input
                     className={`${getInputClass("registrationStartDate")} event-native-picker-clean`}
@@ -499,23 +498,24 @@ function CreateEventForm({
                     type="date"
                     min={isCreateMode ? todayDate : undefined}
                     value={formData.registrationStartDate}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
                     onBlur={() => handleBlur("registrationStartDate")}
                   />
                 }
               />
 
-              <IconField
+              <FormField
                 label="Registration Starting Time"
                 required
                 errorMessage={getFieldError("registrationStartTime")}
-                icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
                     className={`${getInputClass("registrationStartTime")} event-native-picker-clean`}
                     name="registrationStartTime"
                     type="time"
                     value={formData.registrationStartTime}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
                     step="60"
                     onBlur={() => handleBlur("registrationStartTime")}
@@ -525,13 +525,10 @@ function CreateEventForm({
             </div>
 
             <div className="event-grid">
-              <IconField
+              <FormField
                 label="Registration Ending Date"
                 required
                 errorMessage={getFieldError("registrationEndDate")}
-                icon={
-                  <CalendarBlankIcon size={20} className="event-field-icon" />
-                }
                 input={
                   <input
                     className={`${getInputClass("registrationEndDate")} event-native-picker-clean`}
@@ -539,23 +536,24 @@ function CreateEventForm({
                     type="date"
                     min={isCreateMode ? todayDate : undefined}
                     value={formData.registrationEndDate}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
                     onBlur={() => handleBlur("registrationEndDate")}
                   />
                 }
               />
 
-              <IconField
+              <FormField
                 label="Registration Ending Time"
                 required
                 errorMessage={getFieldError("registrationEndTime")}
-                icon={<ClockIcon size={20} className="event-field-icon" />}
                 input={
                   <input
                     className={`${getInputClass("registrationEndTime")} event-native-picker-clean`}
                     name="registrationEndTime"
                     type="time"
                     value={formData.registrationEndTime}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
                     step="60"
                     onBlur={() => handleBlur("registrationEndTime")}
