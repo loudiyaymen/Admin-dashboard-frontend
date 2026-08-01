@@ -5,16 +5,18 @@ function EmptyState({
   description,
   actionLabel,
   onAction,
-  icon: Icon = SealWarningIcon,
+  icon = SealWarningIcon,
   compact = false,
   className = "",
 }) {
+  const Icon = icon;
+
   return (
     <div
       className={`empty-state ${compact ? "empty-state-compact" : ""} ${className}`.trim()}
     >
       <div className="empty-state-badge" aria-hidden="true">
-        <Icon size={compact ? 36 : 48} weight="fill" />
+        <Icon size={compact ? 48 : 56} weight="regular" />
       </div>
 
       <div className="empty-state-copy">

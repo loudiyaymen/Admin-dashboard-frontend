@@ -1938,20 +1938,20 @@
 }
 
 .empty-state-badge {
-  width: 92px;
-  height: 92px;
-  border-radius: 28px;
+  width: 113px;
+  height: 113px;
+  border-radius: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-secondary);
-  background: rgba(31, 41, 55, 0.06);
+  background: #ffffff;
 }
 
 .empty-state-compact .empty-state-badge {
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
+  width: 92px;
+  height: 92px;
+  border-radius: 28px;
 }
 
 .empty-state-copy {
@@ -2071,9 +2071,9 @@
 }
 
 .reports-chart-wrap .empty-state-badge {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+  width: 113px;
+  height: 113px;
+  border-radius: 34px;
 }
 
 .event-list .empty-state {
