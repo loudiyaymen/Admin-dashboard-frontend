@@ -381,9 +381,9 @@
   right: 10px;
   width: 36px;
   height: 36px;
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
+  background: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;

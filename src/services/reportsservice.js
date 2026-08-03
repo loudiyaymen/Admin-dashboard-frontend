@@ -39,6 +39,15 @@ function resolveMediaUrl(url) {
 
 export function mapReportToUi(report) {
   const attachmentUrl = resolveMediaUrl(report.photo_url);
+  const reporterEmail =
+    report.reporter_email || report.user_email || report.email || "Not provided";
+  const reporterName =
+    report.reporter_name ||
+    report.user_name ||
+    report.user_id ||
+    (typeof reporterEmail === "string" && reporterEmail.includes("@")
+      ? reporterEmail.split("@")[0]
+      : "Not provided");
 
   return {
     reportId: report.id,
@@ -48,8 +57,8 @@ export function mapReportToUi(report) {
     status: toUiStatus(report.status),
     submissionDateTime: formatDateTime(report.created_at),
     reporter: {
-      name: report.user_id || "Anonymous",
-      email: "Anonymous",
+      name: reporterName,
+      email: reporterEmail,
     },
     details: {
       incidentDetails: report.description || "-",

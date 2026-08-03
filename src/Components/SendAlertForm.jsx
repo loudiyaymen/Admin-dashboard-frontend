@@ -514,7 +514,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
         {modalStep === "confirm-send" && (
           <div className="alert-confirm-content alert-confirm-send-content">
             <div className="alert-status-icon alert-status-icon-warning">
-              <span className="alert-status-exclamation">!</span>
+              <ExclamationMarkIcon size={44} weight="regular" />
             </div>
 
             <div className="alert-confirm-text">
