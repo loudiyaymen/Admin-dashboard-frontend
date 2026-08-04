@@ -120,10 +120,10 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           ))}
 
           <div className="report-detail-field">
-            <h3>Attachments</h3>
+            <h3>Cover image</h3>
             <div className="report-attachment-list">
               {attachments.length === 0 ? (
-                <p>No attachments</p>
+                <p>No cover image</p>
               ) : (
                 attachments.map((attachment) => (
                   <button

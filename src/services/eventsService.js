@@ -8,11 +8,24 @@ function resolveImageUrl(url) {
   return `${origin}${normalizedPath}`;
 }
 
+function toLocalDateInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function toLocalTimeInput(date) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
 function toUiEvent(event) {
   const date = event.event_date ? new Date(event.event_date) : null;
   const validDate = date && !Number.isNaN(date.getTime()) ? date : null;
-  const dateText = validDate ? validDate.toISOString().slice(0, 10) : "-";
-  const timeText = validDate ? validDate.toISOString().slice(11, 16) : "-";
+  const dateText = validDate ? toLocalDateInput(validDate) : "-";
+  const timeText = validDate ? toLocalTimeInput(validDate) : "-";
 
   const registrationStart = event.registration_start_at
     ? new Date(event.registration_start_at)
@@ -74,16 +87,16 @@ function toUiEvent(event) {
     details: event.description || "",
     coverImage: resolveImageUrl(event.event_image_url),
     registrationStartDate: validStart
-      ? validStart.toISOString().slice(0, 10)
+      ? toLocalDateInput(validStart)
       : dateText,
     registrationStartTime: validStart
-      ? validStart.toISOString().slice(11, 16)
+      ? toLocalTimeInput(validStart)
       : timeText,
     registrationEndDate: validEnd
-      ? validEnd.toISOString().slice(0, 10)
+      ? toLocalDateInput(validEnd)
       : dateText,
     registrationEndTime: validEnd
-      ? validEnd.toISOString().slice(11, 16)
+      ? toLocalTimeInput(validEnd)
       : timeText,
     url: event.event_url || "",
     participants,

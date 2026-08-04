@@ -226,23 +226,23 @@ function EventsPage({ headerProps }) {
       return;
     }
 
-    const eventDate = new Date(`${event.date}T${event.time || "00:00"}:00`);
-    if (Number.isNaN(eventDate.getTime())) {
+    const eventDateValue = `${event.date}T${event.time || "00:00"}:00`;
+    if (Number.isNaN(new Date(eventDateValue).getTime())) {
       const invalidMessage = "Please enter a valid date and time.";
       setErrorMessage(invalidMessage);
       return;
     }
 
-    const registrationStartAt = new Date(
-      `${event.registrationStartDate}T${event.registrationStartTime || "00:00"}:00`,
-    );
-    const registrationEndAt = new Date(
-      `${event.registrationEndDate}T${event.registrationEndTime || "00:00"}:00`,
-    );
+    const registrationStartAtValue = `${event.registrationStartDate}T${
+      event.registrationStartTime || "00:00"
+    }:00`;
+    const registrationEndAtValue = `${event.registrationEndDate}T${
+      event.registrationEndTime || "00:00"
+    }:00`;
 
     if (
-      Number.isNaN(registrationStartAt.getTime()) ||
-      Number.isNaN(registrationEndAt.getTime())
+      Number.isNaN(new Date(registrationStartAtValue).getTime()) ||
+      Number.isNaN(new Date(registrationEndAtValue).getTime())
     ) {
       setErrorMessage("Please enter valid registration start and end dates.");
       return;
@@ -256,14 +256,14 @@ function EventsPage({ headerProps }) {
 
     const apiPayload = {
       title: event.title,
-      event_date: eventDate.toISOString(),
+      event_date: eventDateValue,
       campus_id: selectedCampusId,
       host_type: "admin",
       event_type: event.type,
       description: event.details || "",
       location_text: event.location || "",
-      registration_start_at: registrationStartAt.toISOString(),
-      registration_end_at: registrationEndAt.toISOString(),
+      registration_start_at: registrationStartAtValue,
+      registration_end_at: registrationEndAtValue,
       max_participants: isUnlimited
         ? null
         : Number.isNaN(parsedCapacity)
