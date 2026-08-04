@@ -3,7 +3,6 @@ import {
   BellIcon,
   FileTextIcon,
   WarningCircleIcon,
-  SirenIcon,
   UserIcon,
 } from "@phosphor-icons/react";
 import {
@@ -277,23 +276,6 @@ function DashboardPage({ headerProps }) {
                     </div>
                   </section>
 
-                  <section className="dashboard-stat-card">
-                    <SirenIcon size={34} />
-                    <h3>Emergencies</h3>
-                    <div className="dashboard-stat-value-row">
-                      <h2>{metrics?.emergencyResponses || 0}</h2>
-                      <span
-                        className={
-                          (metrics?.emergencyTrend || 0) >= 0
-                            ? "trend-positive"
-                            : "trend-negative"
-                        }
-                      >
-                        {(metrics?.emergencyTrend || 0) >= 0 ? "↗" : "↘"}{" "}
-                        {metrics?.emergencyTrend || 0}%
-                      </span>
-                    </div>
-                  </section>
                 </div>
 
                 <section className="dashboard-chart-card">

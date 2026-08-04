@@ -4,7 +4,6 @@ import ReportsPage from "./pages/ReportsPage";
 import SendAlertPage from "./pages/SendAlertPage";
 import EventsPage from "./pages/EventsPage";
 import NavigationPage from "./pages/NavigationPage";
-import EmergencyPage from "./pages/EmergencyPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import LoadingAnimation from "./pages/LoadingAnimation";
@@ -124,18 +123,6 @@ function App() {
             <ProtectedRoute>
               <ReportsPage
                 activePage="reports"
-                onNavigate={() => {}}
-                headerProps={headerProps}
-              />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/emergency"
-          element={
-            <ProtectedRoute>
-              <EmergencyPage
-                activePage="emergency"
                 onNavigate={() => {}}
                 headerProps={headerProps}
               />

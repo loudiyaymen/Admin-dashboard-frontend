@@ -4,17 +4,13 @@ import {
   ChatCircleIcon,
   FileTextIcon,
   SquaresFourIcon,
-  SirenIcon,
   MapPinIcon,
-  GearIcon,
-  DeviceMobileIcon,
 } from "@phosphor-icons/react";
 
 const pagePathMap = {
   "/dashboard": "dashboard",
   "/communications": "communications",
   "/reports": "reports",
-  "/emergency": "emergency",
   "/navigation": "navigation",
   "/events": "events",
 };
@@ -30,7 +26,6 @@ function Sidebar() {
       dashboard: "/dashboard",
       communications: "/communications",
       reports: "/reports",
-      emergency: "/emergency",
       navigation: "/navigation",
       events: "/events",
     };
@@ -65,15 +60,6 @@ function Sidebar() {
         >
           <FileTextIcon size={20} />
           <span>Reports</span>
-        </button>
-
-        <button
-          type="button"
-          className={`sidebar-link ${currentPage === "emergency" ? "sidebar-link-active" : ""}`}
-          onClick={() => handleNavigate("emergency")}
-        >
-          <SirenIcon size={20} />
-          <span>Emergency</span>
         </button>
 
         <button
