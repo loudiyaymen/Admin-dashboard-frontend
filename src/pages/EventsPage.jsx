@@ -118,23 +118,60 @@ function EventsPage({ headerProps }) {
     }
   }, [campusId, setSearchParams]);
 
+  const nowTime = Date.now();
+
+  const endedApprovedEvents = useMemo(
+    () =>
+      upcomingEvents.filter((event) => {
+        if (!event.isApproved) return false;
+        const eventDateValue = String(event?.raw?.event_date || "").trim();
+        if (!eventDateValue) return false;
+
+        const parsed = new Date(eventDateValue);
+        if (Number.isNaN(parsed.getTime())) return false;
+
+        return parsed.getTime() < nowTime;
+      }),
+    [upcomingEvents, nowTime],
+  );
+
   const historyEvents = useMemo(
     () =>
       upcomingEvents
-        .filter((event) => !event.isApproved)
+        .filter((event) => {
+          if (!event.isApproved) return true;
+
+          const eventDateValue = String(event?.raw?.event_date || "").trim();
+          if (!eventDateValue) return false;
+
+          const parsed = new Date(eventDateValue);
+          if (Number.isNaN(parsed.getTime())) return false;
+
+          return parsed.getTime() < nowTime;
+        })
         .map((event) => ({
           id: `${event.id}-history`,
           title: event.title,
           schedule: event.date,
-          participantsLabel: "-",
-          status: "Pending",
+          participantsLabel: event.registeredLabel || "-",
+          status: event.isApproved ? "Ended" : "Pending",
         })),
-    [upcomingEvents],
+    [upcomingEvents, nowTime],
   );
 
   const approvedEvents = useMemo(
-    () => upcomingEvents.filter((event) => event.isApproved),
-    [upcomingEvents],
+    () =>
+      upcomingEvents.filter((event) => {
+        if (!event.isApproved) return false;
+        const eventDateValue = String(event?.raw?.event_date || "").trim();
+        if (!eventDateValue) return true;
+
+        const parsed = new Date(eventDateValue);
+        if (Number.isNaN(parsed.getTime())) return true;
+
+        return parsed.getTime() >= nowTime;
+      }),
+    [upcomingEvents, nowTime],
   );
 
   const statsCards = [
@@ -153,7 +190,7 @@ function EventsPage({ headerProps }) {
     },
     {
       id: "s3",
-      value: baseSummary.completedThisMonth,
+      value: endedApprovedEvents.length,
       label: "Completed this Month",
     },
     {

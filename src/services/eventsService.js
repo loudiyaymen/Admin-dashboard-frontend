@@ -86,18 +86,10 @@ function toUiEvent(event) {
         : "No fee",
     details: event.description || "",
     coverImage: resolveImageUrl(event.event_image_url),
-    registrationStartDate: validStart
-      ? toLocalDateInput(validStart)
-      : dateText,
-    registrationStartTime: validStart
-      ? toLocalTimeInput(validStart)
-      : timeText,
-    registrationEndDate: validEnd
-      ? toLocalDateInput(validEnd)
-      : dateText,
-    registrationEndTime: validEnd
-      ? toLocalTimeInput(validEnd)
-      : timeText,
+    registrationStartDate: validStart ? toLocalDateInput(validStart) : dateText,
+    registrationStartTime: validStart ? toLocalTimeInput(validStart) : timeText,
+    registrationEndDate: validEnd ? toLocalDateInput(validEnd) : dateText,
+    registrationEndTime: validEnd ? toLocalTimeInput(validEnd) : timeText,
     url: event.event_url || "",
     participants,
     isApproved: Boolean(event.is_approved),

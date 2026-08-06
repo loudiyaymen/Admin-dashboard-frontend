@@ -19,7 +19,7 @@ import {
   isValidUrl,
 } from "../utils/formValidation";
 
-const TITLE_MAX_LENGTH = 100;
+const TITLE_MAX_LENGTH = 30;
 const DESCRIPTION_MAX_LENGTH = 250;
 
 function formatLocalDate(date) {
@@ -136,7 +136,7 @@ function CreateEventForm({
     const descriptionText = formData.description.trim();
 
     if (!isNonEmptyString(titleText) || titleText.length > TITLE_MAX_LENGTH) {
-      errors.title = "Enter event title. Max 100 characters";
+      errors.title = "Enter event title. Max 30 characters";
     }
 
     if (!isValidDateInput(formData.date)) {

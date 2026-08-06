@@ -275,7 +275,6 @@ function DashboardPage({ headerProps }) {
                       </span>
                     </div>
                   </section>
-
                 </div>
 
                 <section className="dashboard-chart-card">

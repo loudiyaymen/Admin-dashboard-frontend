@@ -324,7 +324,7 @@ function NavigationPage({ headerProps }) {
                                     setActiveInlineField("roomNumber")
                                   }
                                   onBlur={() => setActiveInlineField("")}
-                                  maxLength={12}
+                                  maxLength={25}
                                 />
                               ) : (
                                 room.roomNumber
@@ -347,7 +347,7 @@ function NavigationPage({ headerProps }) {
                                     setActiveInlineField("roomName")
                                   }
                                   onBlur={() => setActiveInlineField("")}
-                                  maxLength={80}
+                                  maxLength={25}
                                 />
                               ) : (
                                 room.roomName || "-"
@@ -363,7 +363,7 @@ function NavigationPage({ headerProps }) {
                                   onClick={() => askConfirmRoomEdit(room)}
                                   disabled={isSavingEdit}
                                 >
-                                  <CheckCircleIcon size={18} weight="bold" />
+                                  <CheckCircleIcon size={22} weight="bold" />
                                 </button>
                               ) : (
                                 <button
@@ -372,7 +372,7 @@ function NavigationPage({ headerProps }) {
                                   aria-label={`Edit ${room.roomNumber}`}
                                   onClick={() => startInlineEdit(room)}
                                 >
-                                  <PencilSimpleIcon size={18} />
+                                  <PencilSimpleIcon size={22} />
                                 </button>
                               )}
                             </td>

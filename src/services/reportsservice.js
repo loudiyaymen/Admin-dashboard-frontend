@@ -40,7 +40,10 @@ function resolveMediaUrl(url) {
 export function mapReportToUi(report) {
   const attachmentUrl = resolveMediaUrl(report.photo_url);
   const reporterEmail =
-    report.reporter_email || report.user_email || report.email || "Not provided";
+    report.reporter_email ||
+    report.user_email ||
+    report.email ||
+    "Not provided";
   const reporterName =
     report.reporter_name ||
     report.user_name ||
