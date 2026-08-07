@@ -34,6 +34,7 @@ function EventsPage({ headerProps }) {
   const [campuses, setCampuses] = useState([]);
   const [campusId, setCampusId] = useState(searchParams.get("campusId") || "");
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [winnerMessage, setWinnerMessage] = useState("");
   const [isDrawingWinner, setIsDrawingWinner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -222,11 +223,13 @@ function EventsPage({ headerProps }) {
     : [];
 
   function handleCreateButtonClick() {
+    setSuccessMessage("");
     setEventFormMode("create");
     setShowCreateEvent(true);
   }
 
   function handleEditButtonClick() {
+    setSuccessMessage("");
     setEventFormMode("edit");
     setShowCreateEvent(true);
   }
@@ -260,14 +263,14 @@ function EventsPage({ headerProps }) {
     if (!selectedCampusId) {
       const noCampusMessage = "No campus available. Create a campus first.";
       setErrorMessage(noCampusMessage);
-      return;
+      return Promise.reject(new Error(noCampusMessage));
     }
 
     const eventDateValue = `${event.date}T${event.time || "00:00"}:00`;
     if (Number.isNaN(new Date(eventDateValue).getTime())) {
       const invalidMessage = "Please enter a valid date and time.";
       setErrorMessage(invalidMessage);
-      return;
+      return Promise.reject(new Error(invalidMessage));
     }
 
     const registrationStartAtValue = `${event.registrationStartDate}T${
@@ -281,8 +284,9 @@ function EventsPage({ headerProps }) {
       Number.isNaN(new Date(registrationStartAtValue).getTime()) ||
       Number.isNaN(new Date(registrationEndAtValue).getTime())
     ) {
-      setErrorMessage("Please enter valid registration start and end dates.");
-      return;
+      const message = "Please enter valid registration start and end dates.";
+      setErrorMessage(message);
+      return Promise.reject(new Error(message));
     }
 
     const capacityRaw = String(event.capacity || "");
@@ -314,30 +318,37 @@ function EventsPage({ headerProps }) {
     };
 
     if (mode === "edit") {
-      updateEvent(event.id, apiPayload)
+      return updateEvent(event.id, apiPayload)
         .then((updated) => {
           setErrorMessage("");
+          setSuccessMessage("");
           setUpcomingEvents((currentEvents) =>
             currentEvents.map((currentEvent) =>
               currentEvent.id === updated.id ? updated : currentEvent,
             ),
           );
           setSelectedUpcomingEventId(updated.id);
+          return updated;
         })
         .catch((error) => {
-          setErrorMessage(error.message || "Failed to update event");
+          const message = error.message || "Failed to update event";
+          setErrorMessage(message);
+          throw error;
         });
-      return;
     }
 
-    createEvent(apiPayload)
+    return createEvent(apiPayload)
       .then((created) => {
         setErrorMessage("");
+        setSuccessMessage("Event created successfully.");
         setUpcomingEvents((currentEvents) => [...currentEvents, created]);
         setSelectedUpcomingEventId(created.id);
+        return created;
       })
       .catch((error) => {
-        setErrorMessage(error.message || "Failed to create event");
+        const message = error.message || "Failed to create event";
+        setErrorMessage(message);
+        throw error;
       });
   }
 
@@ -358,6 +369,10 @@ function EventsPage({ headerProps }) {
             </div>
           ) : (
             <div className="standard-page-content">
+              {successMessage ? (
+                <p className="app-message-success">{successMessage}</p>
+              ) : null}
+
               {selectedUpcomingEvent ? (
                 <section className="event-details-page">
                   <button

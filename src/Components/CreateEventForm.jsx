@@ -278,7 +278,7 @@ function CreateEventForm({
     setConfirmStep(mode === "edit" ? "edit-confirm" : "create-confirm");
   }
 
-  function handleConfirmSubmit() {
+  async function handleConfirmSubmit() {
     const updatedEvent = {
       ...(initialData || {}),
       title: formData.title,
@@ -302,19 +302,23 @@ function CreateEventForm({
       coverImage: initialData?.coverImage || null,
     };
 
-    let submitResult = null;
-
-    if (onSubmitEvent) {
-      submitResult = onSubmitEvent({
-        mode,
-        event: updatedEvent,
-      });
-    } else {
+    if (!onSubmitEvent) {
       alert(
         mode === "edit"
           ? "Event edited successfully."
           : "Event created successfully.",
       );
+      return;
+    }
+
+    try {
+      await onSubmitEvent({
+        mode,
+        event: updatedEvent,
+      });
+    } catch {
+      setConfirmStep("none");
+      return;
     }
 
     if (mode === "edit") {
@@ -322,8 +326,8 @@ function CreateEventForm({
       return;
     }
 
-    setConfirmStep("create-success");
-    return submitResult;
+    setConfirmStep("none");
+    onClose();
   }
 
   function handleCloseSuccess() {
@@ -823,27 +827,6 @@ function CreateEventForm({
         </div>
       )}
 
-      {confirmStep === "create-success" && (
-        <div className="confirm-modal-overlay" onClick={handleCloseSuccess}>
-          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="event-create-confirm-icon event-create-confirm-icon-success">
-              <CheckIcon size={36} weight="regular" />
-            </div>
-
-            <h3>Event created successfully</h3>
-
-            <div className="confirm-modal-actions confirm-modal-actions-single">
-              <button
-                type="button"
-                className="event-submit-button"
-                onClick={handleCloseSuccess}
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
