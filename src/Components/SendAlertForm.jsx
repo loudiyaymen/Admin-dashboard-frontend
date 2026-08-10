@@ -3,11 +3,11 @@ import {
   XIcon,
   CaretDownIcon,
   CheckIcon,
-  ArrowLeftIcon,
   ExclamationMarkIcon,
 } from "@phosphor-icons/react";
 import { sendAlert } from "../services/alertsservice";
 import { fetchBuildings } from "../services/buildingService";
+import { fetchEvents } from "../services/eventsService";
 import { isNonEmptyString } from "../utils/formValidation";
 
 const DEFAULT_BUILDING_NAMES = [
@@ -41,6 +41,17 @@ function createFallbackBuildings() {
   }));
 }
 
+function isUpcomingApprovedEvent(event, nowTime) {
+  if (!event?.isApproved) return false;
+  const eventDateValue = String(event?.raw?.event_date || "").trim();
+  if (!eventDateValue) return true;
+
+  const parsed = new Date(eventDateValue);
+  if (Number.isNaN(parsed.getTime())) return true;
+
+  return parsed.getTime() >= nowTime;
+}
+
 function SendAlertForm({ onClose, onAlertSent }) {
   const [formData, setFormData] = useState({
     alertTitle: "",
@@ -53,9 +64,11 @@ function SendAlertForm({ onClose, onAlertSent }) {
   const [sendError, setSendError] = useState("");
   const [buildings, setBuildings] = useState([]);
   const [buildingSearch, setBuildingSearch] = useState("");
+  const [selectedBuildings, setSelectedBuildings] = useState([]);
   const [isBuildingDropdownOpen, setIsBuildingDropdownOpen] = useState(false);
   const [touchedFields, setTouchedFields] = useState({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hasUpcomingEvents, setHasUpcomingEvents] = useState(true);
   const [, setBuildingsLoading] = useState(true);
 
   useEffect(() => {
@@ -88,6 +101,33 @@ function SendAlertForm({ onClose, onAlertSent }) {
     }
 
     loadBuildings();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadEvents() {
+      try {
+        const events = await fetchEvents();
+        if (!mounted) return;
+
+        const nowTime = Date.now();
+        const hasUpcoming = events.some((event) =>
+          isUpcomingApprovedEvent(event, nowTime),
+        );
+        setHasUpcomingEvents(hasUpcoming);
+      } catch {
+        if (mounted) {
+          setHasUpcomingEvents(true);
+        }
+      }
+    }
+
+    loadEvents();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const alertTypeConfig = {
@@ -133,7 +173,9 @@ function SendAlertForm({ onClose, onAlertSent }) {
     },
   };
 
-  const alertTypeOptions = Object.keys(alertTypeConfig);
+  const alertTypeOptions = Object.keys(alertTypeConfig).filter(
+    (alertType) => alertType !== "Event Reminder" || hasUpcomingEvents,
+  );
 
   const buildingMap = {};
   buildingMap["All Buildings"] = null;
@@ -148,37 +190,45 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
   const buildingMatches = useMemo(() => {
     const query = buildingSearch.trim().toLowerCase();
+    const availableBuildings = buildingOptions.filter(
+      (building) => !selectedBuildings.includes(building),
+    );
 
     if (!query) {
-      return buildingOptions;
+      return availableBuildings;
     }
 
-    return buildingOptions.filter((building) =>
+    return availableBuildings.filter((building) =>
       building.toLowerCase().includes(query),
     );
-  }, [buildingOptions, buildingSearch]);
+  }, [buildingOptions, buildingSearch, selectedBuildings]);
 
   const selectedAlertConfig = alertTypeConfig[formData.alertTitle] || null;
   const requiresBuilding = selectedAlertConfig?.requiresBuilding || false;
 
+  useEffect(() => {
+    if (hasUpcomingEvents) return;
+    if (formData.alertTitle !== "Event Reminder") return;
+
+    // Prevent stale "Event Reminder" state when no future approved events exist.
+    setFormData((currentData) => ({
+      ...currentData,
+      alertTitle: "",
+      message: "",
+    }));
+  }, [formData.alertTitle, hasUpcomingEvents]);
+
   const validationErrors = useMemo(() => {
     const errors = {};
-    const normalizedBuilding = normalizeBuildingName(
-      buildingSearch || formData.building,
-    );
-    const matchedBuilding = buildingOptions.find(
-      (building) => normalizeBuildingName(building) === normalizedBuilding,
-    );
+    const hasValidBuildingSelection = selectedBuildings.length > 0;
 
     if (!isNonEmptyString(formData.alertTitle)) {
       errors.alertTitle = "Choose an alert type.";
     }
 
     if (requiresBuilding) {
-      if (!isNonEmptyString(buildingSearch)) {
+      if (!hasValidBuildingSelection) {
         errors.building = "Choose a building from the list.";
-      } else if (!matchedBuilding) {
-        errors.building = "Select a building from the list.";
       }
     }
 
@@ -190,19 +240,17 @@ function SendAlertForm({ onClose, onAlertSent }) {
 
     return errors;
   }, [
-    buildingOptions,
-    buildingSearch,
     formData.alertTitle,
-    formData.building,
     formData.message,
     requiresBuilding,
+    selectedBuildings.length,
   ]);
 
   function shouldShowError(field) {
     return Boolean(hasSubmitted || touchedFields[field]);
   }
 
-  function getAutoMessage(alertTitle, building) {
+  function getAutoMessage(alertTitle, buildingsSelection = selectedBuildings) {
     const selectedAlert = alertTypeConfig[alertTitle];
 
     if (!selectedAlert) {
@@ -210,11 +258,17 @@ function SendAlertForm({ onClose, onAlertSent }) {
     }
 
     if (selectedAlert.requiresBuilding) {
-      const selectedBuilding =
-        building === "All Buildings"
-          ? "all buildings"
-          : building || "the selected location";
-      return selectedAlert.buildMessage(selectedBuilding);
+      let selectedBuildingLabel = "the selected location";
+
+      if (buildingsSelection.includes("All Buildings")) {
+        selectedBuildingLabel = "all buildings";
+      } else if (buildingsSelection.length === 1) {
+        selectedBuildingLabel = buildingsSelection[0];
+      } else if (buildingsSelection.length > 1) {
+        selectedBuildingLabel = `${buildingsSelection.join(", ")}`;
+      }
+
+      return selectedAlert.buildMessage(selectedBuildingLabel);
     }
 
     return selectedAlert.buildMessage();
@@ -233,24 +287,78 @@ function SendAlertForm({ onClose, onAlertSent }) {
         const nextAlertConfig = alertTypeConfig[value];
         if (!nextAlertConfig?.requiresBuilding) {
           updatedData.building = "All Buildings";
+          setSelectedBuildings(["All Buildings"]);
           setBuildingSearch("All Buildings");
           setIsBuildingDropdownOpen(false);
+        } else if (selectedBuildings.includes("All Buildings")) {
+          setSelectedBuildings([]);
+          setBuildingSearch("");
+          updatedData.building = "";
         } else if (
           !currentData.building ||
           currentData.building === "All Buildings"
         ) {
           setBuildingSearch("");
+          updatedData.building = "";
         }
-        updatedData.message = getAutoMessage(value, updatedData.building);
-      }
-
-      if (name === "building" && updatedData.alertTitle && requiresBuilding) {
-        setBuildingSearch(value);
-        updatedData.message = getAutoMessage(updatedData.alertTitle, value);
+        updatedData.message = getAutoMessage(value, selectedBuildings);
       }
 
       return updatedData;
     });
+  }
+
+  function addBuildingSelection(building) {
+    setSelectedBuildings((current) => {
+      let nextSelection;
+
+      if (building === "All Buildings") {
+        nextSelection = ["All Buildings"];
+      } else {
+        const withoutAllBuildings = current.filter(
+          (item) => item !== "All Buildings",
+        );
+        if (withoutAllBuildings.includes(building)) {
+          nextSelection = withoutAllBuildings;
+        } else {
+          nextSelection = [...withoutAllBuildings, building];
+        }
+      }
+
+      setFormData((currentData) => ({
+        ...currentData,
+        building,
+        // Keep message template synchronized with current multi-building selection.
+        message: getAutoMessage(currentData.alertTitle, nextSelection),
+      }));
+
+      return nextSelection;
+    });
+
+    setBuildingSearch("");
+    setIsBuildingDropdownOpen(false);
+  }
+
+  function removeBuildingSelection(buildingToRemove) {
+    setSelectedBuildings((current) => {
+      const next = current.filter((building) => building !== buildingToRemove);
+      setFormData((currentData) => ({
+        ...currentData,
+        message: getAutoMessage(currentData.alertTitle, next),
+      }));
+      return next;
+    });
+  }
+
+  function clearBuildingSelection() {
+    setSelectedBuildings([]);
+    setBuildingSearch("");
+    setFormData((currentData) => ({
+      ...currentData,
+      building: "",
+      message: getAutoMessage(currentData.alertTitle, []),
+    }));
+    setTouchedFields((current) => ({ ...current, building: true }));
   }
 
   function handleBlur(field) {
@@ -282,6 +390,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
       message: "",
     });
     setBuildingSearch("");
+    setSelectedBuildings([]);
     setIsBuildingDropdownOpen(false);
     setTouchedFields({});
     setHasSubmitted(false);
@@ -293,17 +402,24 @@ function SendAlertForm({ onClose, onAlertSent }) {
     try {
       setSendError("");
       setIsSending(true);
-      const selectedBuilding =
-        buildingOptions.find(
-          (building) =>
-            building.toLowerCase() === formData.building.trim().toLowerCase(),
-        ) || formData.building;
-      const buildingId = buildingMap[selectedBuilding] ?? null;
-      await sendAlert({
-        message: formData.message,
-        alert_type: formData.alertTitle || null,
-        building_id: buildingId,
-      });
+
+      // Multi-building sends are fanned out into one alert per selected building.
+      const targets =
+        !requiresBuilding || selectedBuildings.includes("All Buildings")
+          ? [null]
+          : selectedBuildings
+              .map((buildingName) => buildingMap[buildingName] ?? null)
+              .filter(Boolean);
+
+      await Promise.all(
+        targets.map((buildingId) =>
+          sendAlert({
+            message: formData.message,
+            alert_type: formData.alertTitle || null,
+            building_id: buildingId,
+          }),
+        ),
+      );
 
       if (onAlertSent) {
         await onAlertSent();
@@ -385,35 +501,55 @@ function SendAlertForm({ onClose, onAlertSent }) {
                   </span>
 
                   <div className="building-dropdown-wrap">
-                    <input
-                      className={
-                        shouldShowError("building") && validationErrors.building
-                          ? "event-input event-input-error"
-                          : "event-input"
-                      }
-                      type="text"
-                      name="building"
-                      value={buildingSearch}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        setBuildingSearch(value);
-                        setIsBuildingDropdownOpen(true);
-                        handleChange({
-                          target: {
-                            name: "building",
-                            value,
-                          },
-                        });
-                      }}
-                      onFocus={() => setIsBuildingDropdownOpen(true)}
-                      onBlur={() => {
-                        handleBlur("building");
-                        window.setTimeout(() => {
-                          setIsBuildingDropdownOpen(false);
-                        }, 120);
-                      }}
-                      placeholder="Search buildings"
-                    />
+                    <div className="building-input-row">
+                      <input
+                        className={
+                          shouldShowError("building") &&
+                          validationErrors.building
+                            ? "event-input event-input-error building-input"
+                            : "event-input building-input"
+                        }
+                        type="text"
+                        name="building"
+                        value={buildingSearch}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setBuildingSearch(value);
+                          setIsBuildingDropdownOpen(true);
+                        }}
+                        onFocus={() => setIsBuildingDropdownOpen(true)}
+                        onClick={() => setIsBuildingDropdownOpen(true)}
+                        onBlur={() => {
+                          handleBlur("building");
+                          window.setTimeout(() => {
+                            setIsBuildingDropdownOpen(false);
+                          }, 120);
+                        }}
+                        placeholder="Search buildings"
+                      />
+
+                      <button
+                        type="button"
+                        className="alert-cancel-button building-clear-button"
+                        onClick={clearBuildingSelection}
+                        disabled={selectedBuildings.length === 0}
+                      >
+                        Clear
+                      </button>
+                    </div>
+
+                    <div className="building-selected-list">
+                      {selectedBuildings.map((building) => (
+                        <button
+                          key={building}
+                          type="button"
+                          className="building-selected-chip"
+                          onClick={() => removeBuildingSelection(building)}
+                        >
+                          {building} <XIcon size={14} />
+                        </button>
+                      ))}
+                    </div>
 
                     {isBuildingDropdownOpen ? (
                       <div
@@ -428,18 +564,7 @@ function SendAlertForm({ onClose, onAlertSent }) {
                               type="button"
                               className="building-dropdown-item"
                               onMouseDown={(event) => event.preventDefault()}
-                              onClick={() => {
-                                setBuildingSearch(building);
-                                setFormData((currentData) => ({
-                                  ...currentData,
-                                  building,
-                                  message: getAutoMessage(
-                                    currentData.alertTitle,
-                                    building,
-                                  ),
-                                }));
-                                setIsBuildingDropdownOpen(false);
-                              }}
+                              onClick={() => addBuildingSelection(building)}
                             >
                               {building}
                             </button>

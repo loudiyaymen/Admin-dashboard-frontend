@@ -216,7 +216,7 @@ function SendAlertPage({ headerProps }) {
                         <p className="notification-type">{item.type}</p>
 
                         {!item.isResolutionUpdate ? (
-                          <div style={{ marginTop: 12 }}>
+                          <div className="notification-card-actions">
                             <button
                               type="button"
                               className="event-add-button"

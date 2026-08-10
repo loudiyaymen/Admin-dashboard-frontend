@@ -1412,6 +1412,10 @@
   font-weight: 400;
 }
 
+.notification-card-actions {
+  margin-top: 12px;
+}
+
 .pagination {
   margin: 18px 24px 24px;
   display: flex;
@@ -2778,6 +2782,48 @@
   flex-direction: column;
   gap: 8px;
   position: relative;
+}
+
+.building-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.building-input {
+  flex: 1;
+}
+
+.building-clear-button {
+  padding: 10px 16px;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.building-selected-list {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.building-selected-chip {
+  border: 1px solid #d0d7d4;
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.building-selected-chip:hover,
+.building-selected-chip:focus-visible {
+  background: rgba(0, 107, 67, 0.08);
+  outline: none;
 }
 
 .building-dropdown-wrap input {
