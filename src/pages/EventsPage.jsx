@@ -119,6 +119,10 @@ function EventsPage({ headerProps }) {
     }
   }, [campusId, setSearchParams]);
 
+  useEffect(() => {
+    setWinnerMessage("");
+  }, [selectedUpcomingEventId]);
+
   const nowTime = Date.now();
 
   const endedApprovedEvents = useMemo(
@@ -140,15 +144,7 @@ function EventsPage({ headerProps }) {
     () =>
       upcomingEvents
         .filter((event) => {
-          if (!event.isApproved) return true;
-
-          const eventDateValue = String(event?.raw?.event_date || "").trim();
-          if (!eventDateValue) return false;
-
-          const parsed = new Date(eventDateValue);
-          if (Number.isNaN(parsed.getTime())) return false;
-
-          return parsed.getTime() < nowTime;
+          return !event.isApproved;
         })
         .map((event) => ({
           id: `${event.id}-history`,
@@ -157,7 +153,7 @@ function EventsPage({ headerProps }) {
           participantsLabel: event.registeredLabel || "-",
           status: event.isApproved ? "Ended" : "Pending",
         })),
-    [upcomingEvents, nowTime],
+    [upcomingEvents],
   );
 
   const approvedEvents = useMemo(
@@ -174,6 +170,17 @@ function EventsPage({ headerProps }) {
       }),
     [upcomingEvents, nowTime],
   );
+
+  useEffect(() => {
+    if (!selectedUpcomingEventId) return;
+    const stillUpcoming = approvedEvents.some(
+      (event) => event.id === selectedUpcomingEventId,
+    );
+    if (!stillUpcoming) {
+      setWinnerMessage("");
+      setSelectedUpcomingEventId(null);
+    }
+  }, [approvedEvents, selectedUpcomingEventId]);
 
   const statsCards = [
     {
@@ -378,7 +385,10 @@ function EventsPage({ headerProps }) {
                   <button
                     type="button"
                     className="event-details-back-link"
-                    onClick={() => setSelectedUpcomingEventId(null)}
+                    onClick={() => {
+                      setWinnerMessage("");
+                      setSelectedUpcomingEventId(null);
+                    }}
                   >
                     <ArrowLeftIcon size={16} />
                     <span>Back to Events</span>
