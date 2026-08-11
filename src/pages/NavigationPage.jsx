@@ -9,6 +9,7 @@ import {
   ExclamationMarkIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
@@ -185,6 +186,14 @@ function NavigationPage({ headerProps }) {
     });
   }
 
+  function cancelInlineEdit() {
+    setEditingRoomId("");
+    setEditRoomNumber("");
+    setEditRoomName("");
+    setActiveInlineField("");
+    setEditError("");
+  }
+
   async function handleConfirmRoomEdit() {
     if (!confirmEditPayload) return;
 
@@ -356,15 +365,26 @@ function NavigationPage({ headerProps }) {
                             <td>{room.floor ?? "-"}</td>
                             <td>
                               {isEditingRow ? (
-                                <button
-                                  type="button"
-                                  className="navigation-action-button navigation-action-button-confirm"
-                                  aria-label={`Confirm edit ${room.roomNumber}`}
-                                  onClick={() => askConfirmRoomEdit(room)}
-                                  disabled={isSavingEdit}
-                                >
-                                  <CheckCircleIcon size={22} weight="bold" />
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    className="navigation-action-button navigation-action-button-confirm"
+                                    aria-label={`Confirm edit ${room.roomNumber}`}
+                                    onClick={() => askConfirmRoomEdit(room)}
+                                    disabled={isSavingEdit}
+                                  >
+                                    <CheckCircleIcon size={22} weight="bold" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="navigation-action-button"
+                                    aria-label={`Cancel edit ${room.roomNumber}`}
+                                    onClick={cancelInlineEdit}
+                                    disabled={isSavingEdit}
+                                  >
+                                    <XIcon size={22} />
+                                  </button>
+                                </>
                               ) : (
                                 <button
                                   type="button"
