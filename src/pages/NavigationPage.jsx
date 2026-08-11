@@ -9,7 +9,6 @@ import {
   ExclamationMarkIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
-  XIcon,
 } from "@phosphor-icons/react";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
@@ -184,14 +183,6 @@ function NavigationPage({ headerProps }) {
       newRoomNumber: normalizedRoomNumber,
       newRoomName: normalizedRoomName,
     });
-  }
-
-  function cancelInlineEdit() {
-    setEditingRoomId("");
-    setEditRoomNumber("");
-    setEditRoomName("");
-    setActiveInlineField("");
-    setEditError("");
   }
 
   async function handleConfirmRoomEdit() {
@@ -374,15 +365,6 @@ function NavigationPage({ headerProps }) {
                                     disabled={isSavingEdit}
                                   >
                                     <CheckCircleIcon size={22} weight="bold" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="navigation-action-button"
-                                    aria-label={`Cancel edit ${room.roomNumber}`}
-                                    onClick={cancelInlineEdit}
-                                    disabled={isSavingEdit}
-                                  >
-                                    <XIcon size={22} />
                                   </button>
                                 </>
                               ) : (
