@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { PlusCircleIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
+import {
+  CheckIcon,
+  ExclamationMarkIcon,
+  PlusCircleIcon,
+  MagnifyingGlassIcon,
+} from "@phosphor-icons/react";
 import AdminHeader from "../Components/AdminHeader";
 import EmptyState from "../Components/EmptyState";
 import PageErrorState from "../Components/PageErrorState";
@@ -25,13 +30,19 @@ function SendAlertPage({ headerProps }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [resolveMessage, setResolveMessage] = useState("");
   const [resolvingAlertId, setResolvingAlertId] = useState("");
+  const [pendingResolveNotification, setPendingResolveNotification] =
+    useState(null);
+  const [showResolveSuccess, setShowResolveSuccess] = useState(false);
 
-  async function handleMarkAsFixed(notification) {
+  function handleRequestResolve(notification) {
     setResolveMessage("");
     setErrorMessage("");
+    setShowResolveSuccess(false);
 
     if (notification?.isResolutionUpdate) {
-      setResolveMessage("Resolution update alerts cannot be marked as fixed.");
+      setResolveMessage(
+        "Resolution update alerts cannot be marked as resolved.",
+      );
       return;
     }
 
@@ -40,13 +51,26 @@ function SendAlertPage({ headerProps }) {
       return;
     }
 
+    setPendingResolveNotification(notification);
+  }
+
+  async function handleConfirmResolve() {
+    const notification = pendingResolveNotification;
+
+    if (!notification) {
+      return;
+    }
+
+    setResolveMessage("");
+    setErrorMessage("");
     setResolvingAlertId(notification.id);
+    setPendingResolveNotification(null);
 
     try {
       await resolveAlert(notification.id);
 
-      setResolveMessage(`Sent resolution update for ${notification.title}.`);
       await loadAlerts();
+      setShowResolveSuccess(true);
     } catch (error) {
       setErrorMessage(error.message || "Failed to send resolution alert");
     } finally {
@@ -203,7 +227,33 @@ function SendAlertPage({ headerProps }) {
                   ) : (
                     visibleNotifications.map((item) => (
                       <div key={item.id} className="notification-card">
-                        <h3>{item.title}</h3>
+                        <div className="notification-card-header">
+                          <h3>{item.title}</h3>
+
+                          {!item.isResolutionUpdate ? (
+                            <div className="notification-card-actions">
+                              {item.isResolved ? (
+                                <span className="notification-status-badge is-resolved">
+                                  Resolved
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="event-add-button notification-resolve-button"
+                                  onClick={() => handleRequestResolve(item)}
+                                  disabled={resolvingAlertId === item.id}
+                                >
+                                  <span>
+                                    {resolvingAlertId === item.id
+                                      ? "Sending update..."
+                                      : "Mark as resolved"}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+
                         <p className="notification-description">
                           {item.description}
                         </p>
@@ -214,28 +264,6 @@ function SendAlertPage({ headerProps }) {
                         </div>
 
                         <p className="notification-type">{item.type}</p>
-
-                        {!item.isResolutionUpdate ? (
-                          <div className="notification-card-actions">
-                            <button
-                              type="button"
-                              className="event-add-button"
-                              onClick={() => handleMarkAsFixed(item)}
-                              disabled={
-                                Boolean(item.isResolved) ||
-                                resolvingAlertId === item.id
-                              }
-                            >
-                              <span>
-                                {item.isResolved
-                                  ? "Resolved"
-                                  : resolvingAlertId === item.id
-                                    ? "Sending update..."
-                                    : "Mark as fixed"}
-                              </span>
-                            </button>
-                          </div>
-                        ) : null}
                       </div>
                     ))
                   )}
@@ -274,6 +302,88 @@ function SendAlertPage({ headerProps }) {
           onAlertSent={loadAlerts}
         />
       )}
+
+      {pendingResolveNotification ? (
+        <div
+          className="report-resolve-modal-overlay"
+          onClick={() => setPendingResolveNotification(null)}
+        >
+          <div
+            className="report-resolve-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="report-resolve-modal-content">
+              <div className="report-resolve-icon warning">
+                <ExclamationMarkIcon size={42} weight="regular" />
+              </div>
+
+              <div className="report-resolve-copy">
+                <h2>Mark as Resolved</h2>
+                <p>
+                  Are you sure you want to mark &ldquo;
+                  {pendingResolveNotification.title}&rdquo; as resolved?
+                </p>
+              </div>
+
+              <div className="report-resolve-actions">
+                <button
+                  type="button"
+                  className="report-resolve-cancel"
+                  onClick={() => setPendingResolveNotification(null)}
+                  disabled={resolvingAlertId === pendingResolveNotification.id}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="report-resolve-confirm"
+                  onClick={handleConfirmResolve}
+                  disabled={resolvingAlertId === pendingResolveNotification.id}
+                >
+                  <CheckIcon size={20} weight="bold" />
+                  {resolvingAlertId === pendingResolveNotification.id
+                    ? "Resolving..."
+                    : "Mark as resolved"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showResolveSuccess ? (
+        <div
+          className="report-resolve-modal-overlay"
+          onClick={() => setShowResolveSuccess(false)}
+        >
+          <div
+            className="report-resolve-modal report-resolve-success-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="report-resolve-modal-content report-resolve-success-content">
+              <div className="report-resolve-icon success">
+                <CheckIcon size={42} weight="regular" />
+              </div>
+
+              <div className="report-resolve-copy">
+                <h2>Success!</h2>
+                <p>Alert successfully marked as resolved</p>
+              </div>
+
+              <div className="report-resolve-actions report-resolve-actions-single">
+                <button
+                  type="button"
+                  className="report-resolve-confirm"
+                  onClick={() => setShowResolveSuccess(false)}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
