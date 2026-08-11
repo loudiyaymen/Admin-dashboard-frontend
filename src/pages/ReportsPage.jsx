@@ -66,7 +66,7 @@ function ReportsPage({ headerProps }) {
 
     return reports.filter((report) => {
       return (
-        report.title.toLowerCase().includes(term) ||
+        report.category.toLowerCase().includes(term) ||
         report.reportId.toLowerCase().includes(term)
       );
     });
@@ -182,7 +182,7 @@ function ReportsPage({ headerProps }) {
                     }
                     emptyDescription={
                       searchText.trim()
-                        ? "Try a different title or report ID."
+                        ? "Try a different report type or report ID."
                         : "Reports submitted through the mobile app will appear here."
                     }
                   />

@@ -8,7 +8,7 @@ function ReportRow({ report, onSelect }) {
       onClick={() => onSelect(report.reportId)}
     >
       <div className="report-row-left">
-        <h3>{`${report.title} - ${report.category}`}</h3>
+        <h3>{report.category}</h3>
         <p>{report.location}</p>
         <p className="report-submission-date">
           Submitted: {report.submissionDateTime}
