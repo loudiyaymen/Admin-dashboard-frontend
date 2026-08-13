@@ -1,48 +1,68 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   XIcon,
-  CalendarBlankIcon,
-  ClockIcon,
   MapPinIcon,
   UserIcon,
-  CheckCircleIcon,
+  CheckIcon,
   ImageSquareIcon,
   CaretDownIcon,
-  WarningCircleIcon,
+  ExclamationMarkIcon,
 } from "@phosphor-icons/react";
+import {
+  combineDateAndTime,
+  isNonEmptyString,
+  isNonNegativeNumberString,
+  isPositiveIntegerString,
+  isDateOnOrAfterToday,
+  isValidDateInput,
+  isValidTimeInput,
+  isValidUrl,
+} from "../utils/formValidation";
 
-const requiredFields = [
-  "title",
-  "date",
-  "time",
-  "type",
-  "registrationStartDate",
-  "registrationStartTime",
-  "registrationEndDate",
-  "registrationEndTime",
-  "description",
-];
+const TITLE_MAX_LENGTH = 30;
+const DESCRIPTION_MAX_LENGTH = 250;
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalTime(date) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function buildCreateDefaults() {
+  const now = new Date();
+  const later = new Date(now.getTime() + 60 * 60 * 1000);
+
+  return {
+    title: "",
+    date: formatLocalDate(now),
+    time: formatLocalTime(now),
+    type: "",
+    campusId: "",
+    location: "",
+    registrationStartDate: formatLocalDate(now),
+    registrationStartTime: formatLocalTime(now),
+    registrationEndDate: formatLocalDate(later),
+    registrationEndTime: formatLocalTime(later),
+    maxParticipants: "",
+    unlimitedParticipants: false,
+    description: "",
+    url: "",
+    fee: "",
+    noFee: false,
+    eventImage: null,
+  };
+}
 
 function buildFormData(initialData) {
   if (!initialData) {
-    return {
-      title: "",
-      date: "",
-      time: "",
-      type: "",
-      location: "",
-      registrationStartDate: "",
-      registrationStartTime: "",
-      registrationEndDate: "",
-      registrationEndTime: "",
-      maxParticipants: "",
-      unlimitedParticipants: false,
-      description: "",
-      url: "",
-      fee: "",
-      noFee: false,
-      eventImage: null,
-    };
+    return buildCreateDefaults();
   }
 
   const unlimitedParticipants =
@@ -53,6 +73,7 @@ function buildFormData(initialData) {
     date: initialData.date || "",
     time: initialData.time || "",
     type: initialData.type || "",
+    campusId: initialData.campusId || initialData.raw?.campus_id || "",
     location: initialData.location || "",
     registrationStartDate:
       initialData.registrationStartDate || initialData.date || "",
@@ -82,12 +103,135 @@ function CreateEventForm({
   onClose,
   mode = "create",
   initialData = null,
+  campuses = [],
   onSubmitEvent,
 }) {
   const [formData, setFormData] = useState(() => buildFormData(initialData));
 
-  const [errors, setErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [confirmStep, setConfirmStep] = useState("none");
+  const isCreateMode = mode === "create";
+  const todayDate = formatLocalDate(new Date());
+
+  const campusOptions = useMemo(
+    () =>
+      (Array.isArray(campuses) ? campuses : []).map((campus) => ({
+        campusId: campus?.campus_id || "",
+        name: String(campus?.name || "").trim(),
+      })),
+    [campuses],
+  );
+
+  const selectedCampus = campusOptions.find(
+    (campus) => campus.campusId === formData.campusId,
+  );
+
+  const validationErrors = useMemo(() => {
+    const errors = {};
+    const selectedCampusId = campusOptions.some(
+      (campus) => campus.campusId === formData.campusId,
+    );
+    const titleText = formData.title.trim();
+    const descriptionText = formData.description.trim();
+
+    if (!isNonEmptyString(titleText) || titleText.length > TITLE_MAX_LENGTH) {
+      errors.title = "Enter event title. Max 30 characters";
+    }
+
+    if (!isValidDateInput(formData.date)) {
+      errors.date = "Pick a date";
+    } else if (isCreateMode && !isDateOnOrAfterToday(formData.date)) {
+      errors.date = "Pick a date";
+    }
+
+    if (!isValidTimeInput(formData.time)) {
+      errors.time = "Pick a time";
+    }
+
+    if (!isNonEmptyString(formData.type)) {
+      errors.type = "Select an option";
+    }
+
+    if (!selectedCampusId) {
+      errors.campusId = "Enter a valid location (Building, Room)";
+    }
+
+    if (!isValidDateInput(formData.registrationStartDate)) {
+      errors.registrationStartDate = "Pick a starting date";
+    } else if (
+      isCreateMode &&
+      !isDateOnOrAfterToday(formData.registrationStartDate)
+    ) {
+      errors.registrationStartDate = "Pick a starting date";
+    }
+
+    if (!isValidTimeInput(formData.registrationStartTime)) {
+      errors.registrationStartTime = "Pick a starting time";
+    }
+
+    if (!isValidDateInput(formData.registrationEndDate)) {
+      errors.registrationEndDate = "Pick an ending date";
+    } else if (
+      isCreateMode &&
+      !isDateOnOrAfterToday(formData.registrationEndDate)
+    ) {
+      errors.registrationEndDate = "Pick an ending date";
+    }
+
+    if (!isValidTimeInput(formData.registrationEndTime)) {
+      errors.registrationEndTime = "Pick an ending time";
+    }
+
+    const registrationStart = combineDateAndTime(
+      formData.registrationStartDate,
+      formData.registrationStartTime,
+    );
+    const registrationEnd = combineDateAndTime(
+      formData.registrationEndDate,
+      formData.registrationEndTime,
+    );
+
+    if (
+      registrationStart &&
+      registrationEnd &&
+      registrationEnd < registrationStart
+    ) {
+      errors.registrationEndDate = "Pick an ending date";
+      errors.registrationEndTime = "Pick an ending time";
+    }
+
+    if (!formData.unlimitedParticipants) {
+      if (!isPositiveIntegerString(formData.maxParticipants)) {
+        errors.maxParticipants = "Exceeded the number of maximum participants";
+      }
+    }
+
+    if (
+      !isNonEmptyString(descriptionText) ||
+      descriptionText.length > DESCRIPTION_MAX_LENGTH
+    ) {
+      errors.description = "Enter a description. Max 250 characters";
+    }
+
+    if (!isValidUrl(formData.url)) {
+      errors.url = "Enter a valid URL";
+    }
+
+    if (!formData.noFee && !isNonNegativeNumberString(formData.fee)) {
+      errors.fee = "Enter a valid fee";
+    }
+
+    if (!formData.eventImage) {
+      errors.eventImage = "Could not upload media";
+    }
+
+    return errors;
+  }, [campusOptions, formData, isCreateMode]);
+
+  function shouldShowError(field) {
+    return Boolean(hasSubmitted || touchedFields[field]);
+  }
 
   function handleChange(event) {
     const { name, value, type, checked, files } = event.target;
@@ -118,43 +262,31 @@ function CreateEventForm({
     }));
   }
 
-  function validateForm() {
-    const newErrors = {};
-
-    requiredFields.forEach((field) => {
-      if (!formData[field].trim()) {
-        newErrors[field] = true;
-      }
-    });
-
-    if (!formData.unlimitedParticipants && !formData.maxParticipants.trim()) {
-      newErrors.maxParticipants = true;
-    }
-
-    if (!formData.noFee && !formData.fee.trim()) {
-      newErrors.fee = true;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  function handleBlur(field) {
+    setTouchedFields((current) => ({
+      ...current,
+      [field]: true,
+    }));
   }
 
   function handleSubmit(event) {
     event.preventDefault();
 
-    if (!validateForm()) return;
+    setHasSubmitted(true);
+    if (Object.keys(validationErrors).length > 0) return;
 
     setConfirmStep(mode === "edit" ? "edit-confirm" : "create-confirm");
   }
 
-  function handleConfirmSubmit() {
+  async function handleConfirmSubmit() {
     const updatedEvent = {
       ...(initialData || {}),
       title: formData.title,
       date: formData.date,
       time: formData.time,
       type: formData.type,
-      location: formData.location,
+      campusId: formData.campusId,
+      location: selectedCampus?.name || formData.location,
       schedule: `${formData.date} at ${formData.time}`,
       capacity: formData.unlimitedParticipants
         ? "Unlimited"
@@ -166,21 +298,27 @@ function CreateEventForm({
       registrationEndDate: formData.registrationEndDate,
       registrationEndTime: formData.registrationEndTime,
       url: formData.url,
+      eventImage: formData.eventImage,
+      coverImage: initialData?.coverImage || null,
     };
 
-    let submitResult = null;
-
-    if (onSubmitEvent) {
-      submitResult = onSubmitEvent({
-        mode,
-        event: updatedEvent,
-      });
-    } else {
+    if (!onSubmitEvent) {
       alert(
         mode === "edit"
           ? "Event edited successfully."
           : "Event created successfully.",
       );
+      return;
+    }
+
+    try {
+      await onSubmitEvent({
+        mode,
+        event: updatedEvent,
+      });
+    } catch {
+      setConfirmStep("none");
+      return;
     }
 
     if (mode === "edit") {
@@ -188,8 +326,8 @@ function CreateEventForm({
       return;
     }
 
-    setConfirmStep("create-success");
-    return submitResult;
+    setConfirmStep("none");
+    onClose();
   }
 
   function handleCloseSuccess() {
@@ -197,14 +335,35 @@ function CreateEventForm({
     onClose();
   }
 
+  function resetFormToDefaults() {
+    setFormData(buildFormData(initialData));
+    setTouchedFields({});
+    setHasSubmitted(false);
+    setConfirmStep("none");
+  }
+
   function getInputClass(field) {
-    return errors[field] ? "event-input event-input-error" : "event-input";
+    return `${
+      field && shouldShowError(field) && validationErrors[field]
+        ? "event-input event-input-error"
+        : "event-input"
+    }`;
+  }
+
+  function getFieldError(field) {
+    return shouldShowError(field) ? validationErrors[field] || "" : "";
+  }
+
+  function handleNativePickerClick(event) {
+    if (typeof event.currentTarget.showPicker === "function") {
+      event.currentTarget.showPicker();
+    }
   }
 
   return (
     <>
-      <div className="event-modal-overlay" onClick={onClose}>
-        <div className="event-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="event-modal-overlay">
+        <div className="event-modal">
           <div className="event-modal-header">
             <h2>{mode === "edit" ? "Edit Event" : "Add New Event"}</h2>
             <button
@@ -216,50 +375,57 @@ function CreateEventForm({
             </button>
           </div>
 
-          <form className="event-form" onSubmit={handleSubmit}>
+          <form className="event-form" onSubmit={handleSubmit} noValidate>
             <FormField
               label="Title"
               required
+              errorMessage={getFieldError("title")}
               input={
                 <input
                   className={getInputClass("title")}
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  placeholder="Enter event title"
+                  onBlur={() => handleBlur("title")}
+                  placeholder="Enter event title (e.g. Workshop: Let's Eat Tacos!)"
+                  maxLength={TITLE_MAX_LENGTH}
                 />
               }
             />
 
             <div className="event-grid">
-              <IconField
+              <FormField
                 label="Date"
                 required
-                icon={
-                  <CalendarBlankIcon size={20} className="event-field-icon" />
-                }
+                errorMessage={getFieldError("date")}
                 input={
                   <input
-                    className={getInputClass("date")}
+                    className={`${getInputClass("date")} event-native-picker-clean`}
                     name="date"
+                    type="date"
+                    min={isCreateMode ? todayDate : undefined}
                     value={formData.date}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
-                    placeholder="(e.g. 12/25/2026)"
+                    onBlur={() => handleBlur("date")}
                   />
                 }
               />
 
-              <IconField
+              <FormField
                 label="Time"
                 required
-                icon={<ClockIcon size={20} className="event-field-icon" />}
+                errorMessage={getFieldError("time")}
                 input={
                   <input
-                    className={getInputClass("time")}
+                    className={`${getInputClass("time")} event-native-picker-clean`}
                     name="time"
+                    type="time"
                     value={formData.time}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
-                    placeholder="(e.g. 12:00pm)"
+                    step="60"
+                    onBlur={() => handleBlur("time")}
                   />
                 }
               />
@@ -268,6 +434,7 @@ function CreateEventForm({
             <FormField
               label="Type"
               required
+              errorMessage={getFieldError("type")}
               input={
                 <div className="select-wrapper">
                   <select
@@ -275,6 +442,7 @@ function CreateEventForm({
                     name="type"
                     value={formData.type}
                     onChange={handleChange}
+                    onBlur={() => handleBlur("type")}
                   >
                     <option value="">Select an option</option>
                     <option value="Workshop">Workshop</option>
@@ -287,83 +455,112 @@ function CreateEventForm({
               }
             />
 
-            <IconField
+            <FormField
               label="Location"
               icon={<MapPinIcon size={20} className="event-field-icon" />}
+              errorMessage={getFieldError("campusId")}
               input={
-                <input
-                  className="event-input"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="(e.g. Building C, Room 112)"
-                />
+                <div className="select-wrapper">
+                  <select
+                    className={`${getInputClass("campusId")} event-campus-select`}
+                    name="campusId"
+                    value={formData.campusId}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur("campusId")}
+                  >
+                    <option value="">Select a campus</option>
+                    {campusOptions.map((campus) => {
+                      const isPembroke =
+                        campus.name.toLowerCase() === "pembroke";
+                      return (
+                        <option
+                          key={campus.campusId}
+                          value={campus.campusId}
+                          disabled={isPembroke}
+                        >
+                          {isPembroke
+                            ? `${campus.name} (Coming soon)`
+                            : campus.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <CaretDownIcon size={20} className="select-icon" />
+                </div>
               }
             />
 
             <div className="event-grid">
-              <IconField
+              <FormField
                 label="Registration Starting Date"
                 required
-                icon={
-                  <CalendarBlankIcon size={20} className="event-field-icon" />
-                }
+                errorMessage={getFieldError("registrationStartDate")}
                 input={
                   <input
-                    className={getInputClass("registrationStartDate")}
+                    className={`${getInputClass("registrationStartDate")} event-native-picker-clean`}
                     name="registrationStartDate"
+                    type="date"
+                    min={isCreateMode ? todayDate : undefined}
                     value={formData.registrationStartDate}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
-                    placeholder="(e.g. 12/25/2026)"
+                    onBlur={() => handleBlur("registrationStartDate")}
                   />
                 }
               />
 
-              <IconField
+              <FormField
                 label="Registration Starting Time"
                 required
-                icon={<ClockIcon size={20} className="event-field-icon" />}
+                errorMessage={getFieldError("registrationStartTime")}
                 input={
                   <input
-                    className={getInputClass("registrationStartTime")}
+                    className={`${getInputClass("registrationStartTime")} event-native-picker-clean`}
                     name="registrationStartTime"
+                    type="time"
                     value={formData.registrationStartTime}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
-                    placeholder="(e.g. 12:00pm)"
+                    step="60"
+                    onBlur={() => handleBlur("registrationStartTime")}
                   />
                 }
               />
             </div>
 
             <div className="event-grid">
-              <IconField
+              <FormField
                 label="Registration Ending Date"
                 required
-                icon={
-                  <CalendarBlankIcon size={20} className="event-field-icon" />
-                }
+                errorMessage={getFieldError("registrationEndDate")}
                 input={
                   <input
-                    className={getInputClass("registrationEndDate")}
+                    className={`${getInputClass("registrationEndDate")} event-native-picker-clean`}
                     name="registrationEndDate"
+                    type="date"
+                    min={isCreateMode ? todayDate : undefined}
                     value={formData.registrationEndDate}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
-                    placeholder="(e.g. 12/25/2026)"
+                    onBlur={() => handleBlur("registrationEndDate")}
                   />
                 }
               />
 
-              <IconField
+              <FormField
                 label="Registration Ending Time"
                 required
-                icon={<ClockIcon size={20} className="event-field-icon" />}
+                errorMessage={getFieldError("registrationEndTime")}
                 input={
                   <input
-                    className={getInputClass("registrationEndTime")}
+                    className={`${getInputClass("registrationEndTime")} event-native-picker-clean`}
                     name="registrationEndTime"
+                    type="time"
                     value={formData.registrationEndTime}
+                    onClick={handleNativePickerClick}
                     onChange={handleChange}
-                    placeholder="(e.g. 12:00pm)"
+                    step="60"
+                    onBlur={() => handleBlur("registrationEndTime")}
                   />
                 }
               />
@@ -372,15 +569,20 @@ function CreateEventForm({
             <IconField
               label="Maximum Participants"
               required={!formData.unlimitedParticipants}
+              errorMessage={getFieldError("maxParticipants")}
               icon={<UserIcon size={20} className="event-field-icon" />}
               input={
                 <input
                   className={getInputClass("maxParticipants")}
                   name="maxParticipants"
+                  type="number"
+                  min="1"
+                  step="1"
                   value={formData.maxParticipants}
                   onChange={handleChange}
                   placeholder="(e.g. 25)"
                   disabled={formData.unlimitedParticipants}
+                  onBlur={() => handleBlur("maxParticipants")}
                 />
               }
             />
@@ -395,6 +597,7 @@ function CreateEventForm({
             <FormField
               label="Description"
               required
+              errorMessage={getFieldError("description")}
               input={
                 <textarea
                   className={getInputClass("description")}
@@ -402,20 +605,25 @@ function CreateEventForm({
                   rows="6"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Enter description"
+                  onBlur={() => handleBlur("description")}
+                  placeholder="(e.g. Are you tired of stiff suits and awkward business card exchanges? The Connection Lab is stripping away the formality to focus on what actually matters: genuine conversation and great food.)"
+                  maxLength={DESCRIPTION_MAX_LENGTH}
                 />
               }
             />
 
             <FormField
               label="URL"
+              errorMessage={getFieldError("url")}
               input={
                 <input
-                  className="event-input"
+                  className={getInputClass("url")}
                   name="url"
                   value={formData.url}
                   onChange={handleChange}
+                  type="url"
                   placeholder="URL"
+                  onBlur={() => handleBlur("url")}
                 />
               }
             />
@@ -423,14 +631,19 @@ function CreateEventForm({
             <FormField
               label="Fee"
               required={!formData.noFee}
+              errorMessage={getFieldError("fee")}
               input={
                 <input
                   className={getInputClass("fee")}
                   name="fee"
+                  type="number"
+                  min="0"
+                  step="0.01"
                   value={formData.fee}
                   onChange={handleChange}
                   placeholder="$ (e.g. 5)"
                   disabled={formData.noFee}
+                  onBlur={() => handleBlur("fee")}
                 />
               }
             />
@@ -445,8 +658,15 @@ function CreateEventForm({
             <FormField
               label="Event Image"
               required
+              errorMessage={getFieldError("eventImage")}
               input={
-                <label className="event-upload-box">
+                <label
+                  className={`event-upload-box ${
+                    shouldShowError("eventImage") && validationErrors.eventImage
+                      ? "event-upload-box-error"
+                      : ""
+                  }`}
+                >
                   <input
                     type="file"
                     name="eventImage"
@@ -468,13 +688,13 @@ function CreateEventForm({
               <button
                 type="button"
                 className="event-cancel-button"
-                onClick={onClose}
+                onClick={resetFormToDefaults}
               >
-                Cancel
+                Reset
               </button>
 
               <button type="submit" className="event-submit-button">
-                <CheckCircleIcon size={20} />
+                <CheckIcon size={20} />
                 <span>{mode === "edit" ? "Edit event" : "Create event"}</span>
               </button>
             </div>
@@ -493,7 +713,7 @@ function CreateEventForm({
           >
             <div className="event-edit-confirm-content">
               <div className="event-edit-confirm-icon">
-                <WarningCircleIcon size={44} weight="fill" />
+                <ExclamationMarkIcon size={44} weight="regular" />
               </div>
 
               <div className="event-edit-confirm-copy">
@@ -533,7 +753,7 @@ function CreateEventForm({
                   className="event-submit-button"
                   onClick={handleConfirmSubmit}
                 >
-                  <CheckCircleIcon size={20} />
+                  <CheckIcon size={20} />
                   <span>Confirm edition</span>
                 </button>
               </div>
@@ -553,7 +773,7 @@ function CreateEventForm({
           >
             <div className="event-edit-confirm-content">
               <div className="event-edit-confirm-icon event-edit-confirm-icon-success">
-                <CheckCircleIcon size={44} weight="fill" />
+                <CheckIcon size={44} weight="regular" />
               </div>
 
               <div className="event-edit-confirm-copy">
@@ -582,7 +802,7 @@ function CreateEventForm({
         >
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="event-create-confirm-icon">
-              <WarningCircleIcon size={36} weight="fill" />
+              <ExclamationMarkIcon size={36} weight="regular" />
             </div>
             <h3>Are you sure you want to create the event?</h3>
 
@@ -607,43 +827,23 @@ function CreateEventForm({
         </div>
       )}
 
-      {confirmStep === "create-success" && (
-        <div className="confirm-modal-overlay" onClick={handleCloseSuccess}>
-          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="event-create-confirm-icon event-create-confirm-icon-success">
-              <CheckCircleIcon size={36} weight="fill" />
-            </div>
-
-            <h3>Event created successfully</h3>
-
-            <div className="confirm-modal-actions confirm-modal-actions-single">
-              <button
-                type="button"
-                className="event-submit-button"
-                onClick={handleCloseSuccess}
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
 
-function FormField({ label, required = false, input }) {
+function FormField({ label, required = false, input, errorMessage }) {
   return (
     <label className="event-field event-field-full">
       <span>
         {label} {required && <span className="required-mark">*</span>}
       </span>
       {input}
+      {errorMessage ? <p className="field-error-text">{errorMessage}</p> : null}
     </label>
   );
 }
 
-function IconField({ label, required = false, icon, input }) {
+function IconField({ label, required = false, icon, input, errorMessage }) {
   return (
     <label className="event-field">
       <span>
@@ -653,6 +853,7 @@ function IconField({ label, required = false, icon, input }) {
         {icon}
         {input}
       </div>
+      {errorMessage ? <p className="field-error-text">{errorMessage}</p> : null}
     </label>
   );
 }

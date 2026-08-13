@@ -1,15 +1,14 @@
 @import url("https://fonts.cdnfonts.com/css/metropolis-2");
 
 :root {
-  /* Colors */
-  --color-primary: #296144;
-  --color-secondary: #123229;
+  --color-primary: #006341;
+  --color-secondary: #003328;
   --color-bg: #d9dfe2;
   --color-surface: #ffffff;
   --color-surface-soft: #f8f8f8;
   --color-border: #c6c9cc;
   --color-text: #222;
-  --color-text-secondary: #6c7278;
+  --color-text-secondary: #5e5e5e;
   --color-text-deep-slate: #364153;
   --color-text-dark-grey: #5e5e5e;
   --color-report-incident: #123f93;
@@ -21,7 +20,6 @@
   --color-warning: #f4b400;
   --color-error: #d92222;
 
-  /* Typography */
   --font-family-base: "Metropolis", Arial, sans-serif;
   --text-xl: 32px;
   --text-lg: 28px;
@@ -33,19 +31,16 @@
   --font-semibold: 600;
   --font-medium: 500;
 
-  /* Spacing */
   --space-xs: 6px;
   --space-sm: 10px;
   --space-md: 16px;
   --space-lg: 22px;
   --space-xl: 28px;
 
-  /* Radius */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  /* Shadow */
   --shadow-soft: 0 3px 10px rgba(0, 0, 0, 0.06);
   --shadow-modal: 0 18px 40px rgba(0, 0, 0, 0.18);
 }

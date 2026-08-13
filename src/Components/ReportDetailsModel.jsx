@@ -1,13 +1,16 @@
 import { useState } from "react";
 import {
   ArrowLeftIcon,
-  CheckCircleIcon,
-  WarningCircleIcon,
+  CheckIcon,
+  ExclamationMarkIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 
 function ReportDetailsModal({ report, onBack, onMarkResolved }) {
   const [showResolveConfirm, setShowResolveConfirm] = useState(false);
   const [showResolveSuccess, setShowResolveSuccess] = useState(false);
+  const [resolveError, setResolveError] = useState("");
+  const [activeAttachment, setActiveAttachment] = useState(null);
 
   if (!report) {
     return null;
@@ -33,16 +36,33 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
   ];
 
   const isResolved = report.status.toLowerCase() === "resolved";
+  const attachments = Array.isArray(report.attachments)
+    ? report.attachments
+    : [];
 
   function handleResolveButtonClick() {
     if (isResolved) return;
     setShowResolveConfirm(true);
   }
 
-  function handleConfirmResolve() {
-    onMarkResolved(report.reportId);
-    setShowResolveConfirm(false);
-    setShowResolveSuccess(true);
+  function openAttachmentViewer(attachment) {
+    setActiveAttachment(attachment);
+  }
+
+  function closeAttachmentViewer() {
+    setActiveAttachment(null);
+  }
+
+  async function handleConfirmResolve() {
+    try {
+      setResolveError("");
+      await onMarkResolved(report.reportId);
+      setShowResolveConfirm(false);
+      setShowResolveSuccess(true);
+    } catch (error) {
+      setResolveError(error.message || "Failed to resolve report");
+      setShowResolveConfirm(false);
+    }
   }
 
   return (
@@ -60,7 +80,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           onClick={handleResolveButtonClick}
           disabled={isResolved}
         >
-          <CheckCircleIcon size={20} weight="bold" />
+          <CheckIcon size={20} weight="bold" />
           <span>{isResolved ? "Resolved" : "Mark as resolved"}</span>
         </button>
       </div>
@@ -100,20 +120,35 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           ))}
 
           <div className="report-detail-field">
-            <h3>Attachments</h3>
+            <h3>Cover image</h3>
             <div className="report-attachment-list">
-              {report.attachments.map((attachment) => (
-                <img
-                  key={attachment.id}
-                  src={attachment.src}
-                  alt={attachment.alt}
-                  className="report-attachment-image"
-                />
-              ))}
+              {attachments.length === 0 ? (
+                <p>No cover image</p>
+              ) : (
+                attachments.map((attachment) => (
+                  <button
+                    key={attachment.id}
+                    type="button"
+                    className="report-attachment-button"
+                    onClick={() => openAttachmentViewer(attachment)}
+                    aria-label={`Open attachment ${attachment.alt}`}
+                  >
+                    <img
+                      src={attachment.src}
+                      alt={attachment.alt}
+                      className="report-attachment-image"
+                    />
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>
       </section>
+
+      {resolveError ? (
+        <p className="app-message-error">{resolveError}</p>
+      ) : null}
 
       {showResolveConfirm && (
         <div
@@ -126,7 +161,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           >
             <div className="report-resolve-modal-content">
               <div className="report-resolve-icon warning">
-                <WarningCircleIcon size={42} weight="fill" />
+                <ExclamationMarkIcon size={42} weight="regular" />
               </div>
 
               <div className="report-resolve-copy">
@@ -148,7 +183,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
                   className="report-resolve-confirm"
                   onClick={handleConfirmResolve}
                 >
-                  <CheckCircleIcon size={20} weight="bold" />
+                  <CheckIcon size={20} weight="bold" />
                   <span>Mark as resolved</span>
                 </button>
               </div>
@@ -168,7 +203,7 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           >
             <div className="report-resolve-modal-content report-resolve-success-content">
               <div className="report-resolve-icon success">
-                <CheckCircleIcon size={42} weight="fill" />
+                <CheckIcon size={42} weight="regular" />
               </div>
 
               <div className="report-resolve-copy">
@@ -189,6 +224,37 @@ function ReportDetailsModal({ report, onBack, onMarkResolved }) {
           </div>
         </div>
       )}
+
+      {activeAttachment ? (
+        <div
+          className="report-image-viewer-overlay"
+          onClick={closeAttachmentViewer}
+        >
+          <div
+            className="report-image-viewer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="report-image-viewer-close"
+              onClick={closeAttachmentViewer}
+              aria-label="Close attachment preview"
+            >
+              <XIcon size={22} />
+            </button>
+
+            <img
+              src={activeAttachment.src}
+              alt={activeAttachment.alt}
+              className="report-image-viewer-image"
+            />
+
+            <p className="report-image-viewer-caption">
+              {activeAttachment.alt}
+            </p>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

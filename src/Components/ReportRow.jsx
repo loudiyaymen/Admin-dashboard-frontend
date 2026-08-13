@@ -1,5 +1,4 @@
 function ReportRow({ report, onSelect }) {
-  const categoryClass = report.category.toLowerCase().replace(/\s+/g, "-");
   const statusClass = report.status.toLowerCase().replace(/\s+/g, "-");
 
   return (
@@ -9,15 +8,15 @@ function ReportRow({ report, onSelect }) {
       onClick={() => onSelect(report.reportId)}
     >
       <div className="report-row-left">
-        <h3>{report.title}</h3>
+        <h3>{report.category}</h3>
         <p>{report.location}</p>
+        <p className="report-submission-date">
+          Submitted: {report.submissionDateTime}
+        </p>
         <span>{report.reportId}</span>
       </div>
 
       <div className="report-row-right">
-        <span className={`report-badge report-badge-${categoryClass}`}>
-          {report.category}
-        </span>
         <span className={`report-badge report-badge-status-${statusClass}`}>
           {report.status}
         </span>
