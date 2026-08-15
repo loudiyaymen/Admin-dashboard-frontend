@@ -1,16 +1,59 @@
-# React + Vite
+# Admin Dashboard Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Prerequisites
 
-Currently, two official plugins are available:
+Before you begin, install the following:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Git**
+- **Node.js 18+** (includes npm)
+- **A running backend server** (see [admin-dashboard README](../admin-dashboard/README.md))
 
-## React Compiler
+## Installation
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Clone the repository
 
-## Expanding the ESLint configuration
+If you haven't already:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+git clone https://github.com/Student-Algonquin-Mobile-Safety/Admin-dashboard.git
+cd admin-dashboard-frontend
+```
+
+Or if you already have the repository:
+
+```bash
+cd admin-dashboard-frontend
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+## Running the Application
+
+### Development Server
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 5173 is already in use, Vite will automatically use the next available port.
+
+### Backend Connection Issues
+
+- Verify the backend server is running on `localhost:4000`
+- Check that `VITE_API_BASE_URL` and `VITE_WS_URL` in `.env` match your backend configuration
+- Ensure your `.env` file is saved and the dev server has reloaded
+
+### WebSocket Connection Failed
+
+- Confirm the backend WebSocket server is running on the configured port (default: 4001)
+- Check browser console for connection errors
