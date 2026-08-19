@@ -7,7 +7,7 @@ import NavigationPage from "./pages/NavigationPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import LoadingAnimation from "./pages/LoadingAnimation";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./Components/ProtectedRoute";
 import {
   getAdminCredentials,
   hasAdminToken,
