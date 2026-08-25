@@ -110,6 +110,7 @@ function CreateEventForm({
 
   const [touchedFields, setTouchedFields] = useState({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [confirmStep, setConfirmStep] = useState("none");
   const isCreateMode = mode === "create";
   const todayDate = formatLocalDate(new Date());
@@ -191,6 +192,7 @@ function CreateEventForm({
       formData.registrationEndDate,
       formData.registrationEndTime,
     );
+    const eventStart = combineDateAndTime(formData.date, formData.time);
 
     if (
       registrationStart &&
@@ -199,6 +201,20 @@ function CreateEventForm({
     ) {
       errors.registrationEndDate = "Pick an ending date";
       errors.registrationEndTime = "Pick an ending time";
+    }
+
+    if (eventStart && registrationStart && registrationStart >= eventStart) {
+      errors.registrationStartDate =
+        "Registration start must be before event start";
+      errors.registrationStartTime =
+        "Registration start must be before event start";
+    }
+
+    if (eventStart && registrationEnd && registrationEnd >= eventStart) {
+      errors.registrationEndDate =
+        "Registration end must be before event start";
+      errors.registrationEndTime =
+        "Registration end must be before event start";
     }
 
     if (!formData.unlimitedParticipants) {
@@ -235,6 +251,7 @@ function CreateEventForm({
 
   function handleChange(event) {
     const { name, value, type, checked, files } = event.target;
+    setSubmitError("");
 
     if (type === "checkbox") {
       setFormData((prev) => ({
@@ -272,6 +289,7 @@ function CreateEventForm({
   function handleSubmit(event) {
     event.preventDefault();
 
+    setSubmitError("");
     setHasSubmitted(true);
     if (Object.keys(validationErrors).length > 0) return;
 
@@ -316,7 +334,8 @@ function CreateEventForm({
         mode,
         event: updatedEvent,
       });
-    } catch {
+    } catch (error) {
+      setSubmitError(error?.message || "Failed to submit event.");
       setConfirmStep("none");
       return;
     }
@@ -339,6 +358,7 @@ function CreateEventForm({
     setFormData(buildFormData(initialData));
     setTouchedFields({});
     setHasSubmitted(false);
+    setSubmitError("");
     setConfirmStep("none");
   }
 
@@ -684,6 +704,10 @@ function CreateEventForm({
               }
             />
 
+            {submitError ? (
+              <p className="app-message-error">{submitError}</p>
+            ) : null}
+
             <div className="event-modal-actions">
               <button
                 type="button"
@@ -826,7 +850,6 @@ function CreateEventForm({
           </div>
         </div>
       )}
-
     </>
   );
 }

@@ -8,6 +8,7 @@ import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import LoadingAnimation from "./pages/LoadingAnimation";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import { AUTH_EXPIRED_EVENT } from "./services/apiClient";
 import {
   getAdminCredentials,
   hasAdminToken,
@@ -35,6 +36,20 @@ function App() {
     }),
     [adminUsername],
   );
+
+  useEffect(() => {
+    function handleAuthExpired() {
+      setIsAuthenticated(false);
+      setAdminUsername("Admin user");
+      setAuthSuccess("");
+      setAuthError("Your session expired. Please log in again.");
+    }
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    return () => {
+      window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;

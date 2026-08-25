@@ -39,6 +39,8 @@ function resolveMediaUrl(url) {
 
 export function mapReportToUi(report) {
   const attachmentUrl = resolveMediaUrl(report.photo_url);
+  const locationText =
+    report.location_text || report.location || report.campus_id;
   const reporterEmail =
     report.reporter_email ||
     report.user_email ||
@@ -55,7 +57,7 @@ export function mapReportToUi(report) {
   return {
     reportId: report.id,
     title: report.description || "Report",
-    location: report.campus_id || "Unknown campus",
+    location: locationText || "Unknown location",
     category: toUiCategory(report.type),
     status: toUiStatus(report.status),
     submissionDateTime: formatDateTime(report.created_at),
@@ -65,7 +67,7 @@ export function mapReportToUi(report) {
     },
     details: {
       incidentDetails: report.description || "-",
-      location: report.campus_id || "-",
+      location: locationText || "-",
       dateOfIncident: formatDateTime(report.created_at).split(" ")[0],
       timeOfIncident: formatDateTime(report.created_at).split(" ")[1] || "-",
     },

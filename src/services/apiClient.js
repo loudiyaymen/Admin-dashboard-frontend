@@ -2,6 +2,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
 
 const ADMIN_TOKEN_KEY = "adminAuthToken";
+export const AUTH_EXPIRED_EVENT = "admin-auth-expired";
 
 function buildHeaders(customHeaders = {}, includeJsonContentType = true) {
   const headers = { ...customHeaders };
@@ -24,6 +25,13 @@ async function parseResponse(response) {
   const payload = isJson ? await response.json() : await response.text();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      clearAdminToken();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+      }
+    }
+
     const message =
       typeof payload === "object" && payload?.error
         ? payload.error

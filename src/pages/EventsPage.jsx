@@ -25,6 +25,10 @@ const baseSummary = {
   avgAttendance: "-",
 };
 
+function isEventImageSizeError(message) {
+  return /5\s*mb\s*or\s*smaller/i.test(String(message || ""));
+}
+
 function EventsPage({ headerProps }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showCreateEvent, setShowCreateEvent] = useState(false);
@@ -354,7 +358,11 @@ function EventsPage({ headerProps }) {
       })
       .catch((error) => {
         const message = error.message || "Failed to create event";
-        setErrorMessage(message);
+        if (isEventImageSizeError(message)) {
+          setErrorMessage("");
+        } else {
+          setErrorMessage(message);
+        }
         throw error;
       });
   }
