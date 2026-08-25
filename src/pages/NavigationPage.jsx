@@ -9,6 +9,7 @@ import {
   ExclamationMarkIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import AdminHeader from "../Components/AdminHeader";
 import Sidebar from "../Components/Sidebar";
@@ -152,6 +153,15 @@ function NavigationPage({ headerProps }) {
     setEditRoomName(String(room.roomName || "").replace(/^-$/, ""));
     setActiveInlineField("");
     setEditError("");
+  }
+
+  function cancelInlineEdit() {
+    setEditingRoomId("");
+    setEditRoomNumber("");
+    setEditRoomName("");
+    setActiveInlineField("");
+    setEditError("");
+    setConfirmEditPayload(null);
   }
 
   function askConfirmRoomEdit(room) {
@@ -356,7 +366,7 @@ function NavigationPage({ headerProps }) {
                             <td>{room.floor ?? "-"}</td>
                             <td>
                               {isEditingRow ? (
-                                <>
+                                <div className="navigation-action-inline-controls">
                                   <button
                                     type="button"
                                     className="navigation-action-button navigation-action-button-confirm"
@@ -366,7 +376,16 @@ function NavigationPage({ headerProps }) {
                                   >
                                     <CheckCircleIcon size={22} weight="bold" />
                                   </button>
-                                </>
+                                  <button
+                                    type="button"
+                                    className="navigation-action-button"
+                                    aria-label={`Cancel edit ${room.roomNumber || "room"}`}
+                                    onClick={cancelInlineEdit}
+                                    disabled={isSavingEdit}
+                                  >
+                                    <XIcon size={22} />
+                                  </button>
+                                </div>
                               ) : (
                                 <button
                                   type="button"

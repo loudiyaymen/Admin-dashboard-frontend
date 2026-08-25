@@ -981,6 +981,12 @@
   color: var(--color-primary);
 }
 
+.navigation-action-inline-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .navigation-inline-input {
   width: 106px;
   height: 36px;

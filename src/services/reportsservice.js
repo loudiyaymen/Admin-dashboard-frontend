@@ -37,10 +37,26 @@ function resolveMediaUrl(url) {
   return `${origin}${normalizedPath}`;
 }
 
+function isUuidLike(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value || "").trim(),
+  );
+}
+
+function toUiLocation(report) {
+  const rawLocation = report.location_text || report.location;
+  const location = String(rawLocation || "").trim();
+
+  if (!location || isUuidLike(location)) {
+    return "N/A";
+  }
+
+  return location;
+}
+
 export function mapReportToUi(report) {
   const attachmentUrl = resolveMediaUrl(report.photo_url);
-  const locationText =
-    report.location_text || report.location || report.campus_id;
+  const locationText = toUiLocation(report);
   const reporterEmail =
     report.reporter_email ||
     report.user_email ||
@@ -57,7 +73,7 @@ export function mapReportToUi(report) {
   return {
     reportId: report.id,
     title: report.description || "Report",
-    location: locationText || "Unknown location",
+    location: locationText,
     category: toUiCategory(report.type),
     status: toUiStatus(report.status),
     submissionDateTime: formatDateTime(report.created_at),
@@ -67,7 +83,7 @@ export function mapReportToUi(report) {
     },
     details: {
       incidentDetails: report.description || "-",
-      location: locationText || "-",
+      location: locationText,
       dateOfIncident: formatDateTime(report.created_at).split(" ")[0],
       timeOfIncident: formatDateTime(report.created_at).split(" ")[1] || "-",
     },

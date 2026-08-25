@@ -21,6 +21,7 @@ import {
 
 const TITLE_MAX_LENGTH = 30;
 const DESCRIPTION_MAX_LENGTH = 250;
+const EVENT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 function formatLocalDate(date) {
   const year = date.getFullYear();
@@ -238,8 +239,11 @@ function CreateEventForm({
       errors.fee = "Enter a valid fee";
     }
 
-    if (!formData.eventImage) {
-      errors.eventImage = "Could not upload media";
+    if (
+      formData.eventImage &&
+      Number(formData.eventImage.size) > EVENT_IMAGE_MAX_BYTES
+    ) {
+      errors.eventImage = "Event image must be 5MB or smaller";
     }
 
     return errors;
@@ -266,10 +270,17 @@ function CreateEventForm({
     }
 
     if (type === "file") {
+      const selectedFile = files[0] || null;
       setFormData((prev) => ({
         ...prev,
-        eventImage: files[0] || null,
+        eventImage: selectedFile,
       }));
+
+      if (selectedFile && Number(selectedFile.size) > EVENT_IMAGE_MAX_BYTES) {
+        setSubmitError("Event image must be 5MB or smaller");
+      } else {
+        setSubmitError("");
+      }
       return;
     }
 
@@ -677,7 +688,6 @@ function CreateEventForm({
 
             <FormField
               label="Event Image"
-              required
               errorMessage={getFieldError("eventImage")}
               input={
                 <label
@@ -690,7 +700,7 @@ function CreateEventForm({
                   <input
                     type="file"
                     name="eventImage"
-                    accept="image/*,video/*"
+                    accept="image/*"
                     onChange={handleChange}
                     hidden
                   />
@@ -698,7 +708,7 @@ function CreateEventForm({
                   <span>
                     {formData.eventImage
                       ? formData.eventImage.name
-                      : "Add Photo or Video"}
+                      : "Add photo (optional)"}
                   </span>
                 </label>
               }

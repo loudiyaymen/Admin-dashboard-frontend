@@ -25,10 +25,6 @@ const baseSummary = {
   avgAttendance: "-",
 };
 
-function isEventImageSizeError(message) {
-  return /5\s*mb\s*or\s*smaller/i.test(String(message || ""));
-}
-
 function EventsPage({ headerProps }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showCreateEvent, setShowCreateEvent] = useState(false);
@@ -45,8 +41,8 @@ function EventsPage({ headerProps }) {
 
   const loadEvents = useCallback(
     async ({ silent = false } = {}) => {
-      setErrorMessage("");
       if (!silent) {
+        setErrorMessage("");
         setIsLoading(true);
       }
 
@@ -79,7 +75,9 @@ function EventsPage({ headerProps }) {
           return campuses[0].campus_id;
         });
       } catch (error) {
-        setErrorMessage(error.message || "Failed to load events");
+        if (!silent) {
+          setErrorMessage(error.message || "Failed to load events");
+        }
       } finally {
         if (!silent) {
           setIsLoading(false);
@@ -358,11 +356,7 @@ function EventsPage({ headerProps }) {
       })
       .catch((error) => {
         const message = error.message || "Failed to create event";
-        if (isEventImageSizeError(message)) {
-          setErrorMessage("");
-        } else {
-          setErrorMessage(message);
-        }
+        setErrorMessage(message);
         throw error;
       });
   }
