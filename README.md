@@ -1,59 +1,55 @@
-# Admin Dashboard Frontend
+# Algonquin GO — Admin Dashboard
 
-## Prerequisites
+Web dashboard for campus security staff, part of **Algonquin GO**, a campus safety and indoor navigation platform built for Algonquin College. It talks to the [backend API](https://github.com/loudiyaymen/Admin-dashboard) and manages what students see in the [mobile app](https://github.com/loudiyaymen/Mobile-app).
 
-Before you begin, install the following:
+## Features
 
-- **Git**
-- **Node.js 18+** (includes npm)
-- **A running backend server** (see [admin-dashboard README](../admin-dashboard/README.md))
+- **Dashboard:** live system status and Recharts graphs of report and usage trends.
+- **Report inbox:** searchable list of incident reports with analytics, detail view, uploaded photos and resolve flow.
+- **Send alerts:** pick one or more buildings, send an alert with an auto-generated message, and mark alerts as resolved from the history.
+- **Live emergencies:** incoming SOS events arrive over WebSockets.
+- **Events:** create and edit events, view registered participants and draw winners.
+- **Navigation:** edit building rooms and navigation data used by the mobile app.
+- Protected routes with admin login, inline form validation and accessible colours.
 
-## Installation
+## Tech stack
 
-### 1. Clone the repository
+React 19 · Vite · React Router 7 · Recharts · WebSockets · Azure Static Web Apps
 
-If you haven't already:
+## Getting started
 
-```bash
-git clone https://github.com/Student-Algonquin-Mobile-Safety/Admin-dashboard.git
-cd admin-dashboard-frontend
-```
-
-Or if you already have the repository:
-
-```bash
-cd admin-dashboard-frontend
-```
-
-### 2. Install dependencies
+Prerequisites: Node.js 18+ and a running [backend](https://github.com/loudiyaymen/Admin-dashboard).
 
 ```bash
+git clone https://github.com/loudiyaymen/Admin-dashboard-frontend.git
+cd Admin-dashboard-frontend
 npm install
-```
-
-## Running the Application
-
-### Development Server
-
-Start the Vite development server:
-
-```bash
+cp .env.example .env
 npm run dev
 ```
 
+`.env` settings:
+
+| Variable | Default |
+|---|---|
+| `VITE_API_BASE_URL` | `http://localhost:4000/api/v1` |
+| `VITE_WS_URL` | `ws://localhost:4001` |
+
+Vite serves the app on `http://localhost:5173` (or the next free port).
+
 ## Troubleshooting
 
-### Port Already in Use
+### Backend connection issues
 
-If port 5173 is already in use, Vite will automatically use the next available port.
+- Check that the backend is running on `localhost:4000`.
+- Check that `VITE_API_BASE_URL` and `VITE_WS_URL` in `.env` match your backend.
+- Restart the dev server after editing `.env`.
 
-### Backend Connection Issues
+### WebSocket connection failed
 
-- Verify the backend server is running on `localhost:4000`
-- Check that `VITE_API_BASE_URL` and `VITE_WS_URL` in `.env` match your backend configuration
-- Ensure your `.env` file is saved and the dev server has reloaded
+- Confirm the backend WebSocket server is running on the configured port (default `4001`).
+- Check the browser console for connection errors.
 
-### WebSocket Connection Failed
+## Credits
 
-- Confirm the backend WebSocket server is running on the configured port (default: 4001)
-- Check browser console for connection errors
+UI/UX design by the Algonquin College design team (Figma).
